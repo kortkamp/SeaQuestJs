@@ -19,27 +19,91 @@ ntscTiaPallete = [
 	0x442800,0x644818,0x846830,0x4a8444,0xb89c58,0xd0b46c,0xe8cc7c,0xfce08c
 ];
 
+var scanlines = 192;
+var canvasScale = 3;
+var cv = document.getElementById("gameCanvas");
+var ctx = cv.getContext("2d");
 
-drawBG(){
+
+
+window.onload = init();
+
+
+// Converts a HEX RIA pallete code to RGB format.
+function tiaColor(value){
+	return("#" + ntscTiaPallete[Math.floor(value/2)].toString(16).padStart(6,"0"));
+}
+
+function drawBG(){
+	// SeaQuest Background color.
+	sqbk =
+		[[26,0x84],
+		[2,0x74],
+		[2,0x64],
+		[2,0x54],
+		[2,0x44],
+		[2,0x34],
+		[1,0x24],
+		[1,0x14],
+		[10,0x92],
+		[1,0x00],
+		[97,0x90],
+		[2,0xa0],
+		[2,0xb0],
+		[11,0xc0],
+		[7,0x32],
+		[13,0x06]]
+	// Clear Screen
+	ctx.clearRect(0,0,width,height);
+	// Draw backgound scheme stored in sqbk.
+	scanline = 0;
+	for(colorBK of sqbk){
+		
+		console.log(colorBK);
+		for(i = 0; i < colorBK[0];i++){
+			scanline++;
+			ctx.fillStyle = tiaColor(colorBK[1]);
+			ctx.fillRect(0,scanline*canvasScale,width,canvasScale);
+		}	
+	}
+	
+	// Draw playfield;
+	
+	
+	
+	for(i = 0 ; i < scanlines; i++){
+		//ctx.fillStyle = tiaColor(0x84);
+		//ctx.fillRect(0,i*canvasScale,width,canvasScale);
+	}
+	
+}
+
+function frameDraw(){
+	drawBG();
+	
+}
+
+
+function gameLogic(){
 	
 	
 }
 
-gameDraw(){
-	drawBG()
+function frameLoop(){
+	gameLogic();
+	frameDraw();
 	
 }
 
 
-gameLogic(){
+function init(){
 	
+	width = cv.width
+	height = cv.height
 	
-}
-
-
-init(){
-	
-	updateTimerTimerId = setInterval(updateTimer, 16);
+	// Set refresh to 60, like the original Atari 2600 hardware.
+	//updateTimerTimerId = setInterval(frameLoop, 16);
+	frameLoop();
 	
 }
 
