@@ -48,7 +48,7 @@ loop:
 	asl
 	eor	$82		;a = a XOR [0x82](memory content at 0x82)
 	asl
-	rol	$82		;bit rotate left and if overflow ocurs , set C flag
+	rol	$82		;memoy content bit rotate left and add value of C flag
 	dey			;decrease y
 	bpl	loop	;if last operation results positive goto loop.
 	rts
@@ -73,16 +73,69 @@ loop:
 	return(value & 0xFF); // returns just a 8bit value
 }
 
+// Sprites
+
+// Sub Sprite
+// Can you see a sub here ??
+subSprite = [
+	[
+	0b00000100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b00111111,
+	0b11111111,
+	0b11111101,
+	0b01111111,
+	0b11111110,
+	0b10000000],
+	[
+	0b00000100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b10111111,
+	0b01111111,
+	0b11111101,
+	0b11111111,
+	0b01111110,
+	0b10000000],
+	[
+	0b00000100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b00001100,
+	0b10111111,
+	0b11111111,
+	0b01111101,
+	0b11111111,
+	0b11111110,
+	0b00000000],
+];
+
+function drawSprite(sprite,x,y,dir,color,hScale){
+    for(line in sprite){
+		ctx.fillStyle = tiaColor(color);
+		for(var i = 0; i<8;i++){
+			if(((sprite[line]<<i)&0x80)==0x80){
+				ctx.fillRect(x+2*i*hScale*canvasScale,y+line*canvasScale,2*hScale*canvasScale,canvasScale);
+			}
+		}
+	}
+}
 
 
 function drawBG(){
 	
-	if(seaTokenCounter == 7){
+	/*if(seaTokenCounter == 7){
 		seaToken = shuffle(seaToken);
 		seaTokenCounter = 0;
 	}else{
 		seaTokenCounter++;
-	}
+	}*/
 	seaWaveGenerator = ((seaToken&1)<<9) + (seaToken<<1) + (seaToken>>7) ;
 	//console.log( " " + seaToken.toString(2).padStart(8,'0'));
 	//console.log(seaWaveGenerator.toString(2).padStart(10,'0'));
@@ -120,19 +173,25 @@ function drawBG(){
 			}
 			ctx.fillRect(0,scanline*canvasScale,width,canvasScale);
 			scanline++;
-		}
-			
+		}		
 	}
 	
 	// Draw playfield;
 	
+	
+	// Draw Player;
+	drawSprite(subSprite[(frameCounter>>2)%3],200,200,1,0x18,2);
 	
 	
 	for(i = 0 ; i < scanlines; i++){
 		//ctx.fillStyle = tiaColor(0x84);
 		//ctx.fillRect(0,i*canvasScale,width,canvasScale);
 	}
-	
+	// Update the frame counter.
+	frameCounter++;
+	// Each 8 frames update the Sea Waves Token;
+	if((frameCounter & 0x07) == 0x07)
+		seaToken = shuffle(seaToken);
 }
 
 function frameDraw(){
@@ -162,6 +221,9 @@ function init(){
 	seaToken = 0x08;
 	// Counter used to generate a new seaToken.
 	seaTokenCounter = 0;
+	
+	// Frame counter for use in animations and miscs.
+	frameCounter = 0;
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
