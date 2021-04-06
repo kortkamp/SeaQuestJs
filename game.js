@@ -1,5 +1,6 @@
 
 // Atari 2600 pallete converted to RGB.
+// The index represents each of 128 NTSC collor  pallete.
 ntscTiaPallete = [
 	0x000000,0x404040,0x6c6c6c,0x909090,0xb0b0b0,0xc8c8c8,0xdcdcdc,0xececec,
 	0x444400,0x646410,0x848424,0xa0a034,0xb8b840,0xd0d050,0xe8e85c,0xfcfc68,
@@ -34,37 +35,93 @@ function tiaColor(value){
 	return("#" + ntscTiaPallete[Math.floor(value/2)].toString(16).padStart(6,"0"));
 }
 
+// This function emulates the exact behavior of Sea Quest shuffle routine.
+function shuffle(value){
+/*  Original Sea Quest shuffle routine in 6502 assembly.
+
+shuffle:
+	ldy	#$02	;load $02 to y register
+loop:
+	lda	$82		;load memory content at 0x82 to a register
+	asl			;bit rotate left, basicaly multiply by 2
+	asl
+	asl
+	eor	$82		;a = a XOR [0x82](memory content at 0x82)
+	asl
+	rol	$82		;bit rotate left and if overflow ocurs , set C flag
+	dey			;decrease y
+	bpl	loop	;if last operation results positive goto loop.
+	rts
+*/
+	
+	var c_flag;			// Flag that indicates if last operation resulted in a
+						// overflow of 8bit 6502 register
+	for(var y_reg = 2 ; y_reg >= 0; y_reg--){ //y_reg equivalent to Y register
+		var a_reg = value;	// equivalent to register A in 6502 cpu
+		a_reg = a_reg << 1;
+		a_reg = a_reg << 1;
+		a_reg = a_reg << 1;
+		a_reg = 0xff & (a_reg^value);
+		a_reg = a_reg << 1;
+		if(a_reg > 0xff){ // a overflow ocurred.
+			c_flag = 1;
+		}else{
+			c_flag = 0;
+		}
+		value = (value << 1) + c_flag;	
+	}
+	return(value & 0xFF); // returns just a 8bit value
+}
+
+
+
 function drawBG(){
+	
+	if(seaTokenCounter == 7){
+		seaToken = shuffle(seaToken);
+		seaTokenCounter = 0;
+	}else{
+		seaTokenCounter++;
+	}
+	seaWaveGenerator = ((seaToken&1)<<9) + (seaToken<<1) + (seaToken>>7) ;
+	//console.log( " " + seaToken.toString(2).padStart(8,'0'));
+	//console.log(seaWaveGenerator.toString(2).padStart(10,'0'));
 	// SeaQuest Background color.
 	sqbk =
-		[[26,0x84],
-		[2,0x74],
-		[2,0x64],
-		[2,0x54],
-		[2,0x44],
-		[2,0x34],
-		[1,0x24],
-		[1,0x14],
-		[10,0x92],
+		[[26,0x84], // Sky
+		[2,0x74],	//
+		[2,0x64],	//
+		[2,0x54],	//
+		[2,0x44],	//	Dawn
+		[2,0x34],	//
+		[1,0x24],	//
+		[1,0x14],	//
+		[10,0x90],  // Sea waves
 		[1,0x00],
-		[97,0x90],
+		[97,0x90],	// Deep Sea
 		[2,0xa0],
 		[2,0xb0],
-		[11,0xc0],
+		[11,0xc0],	// Sea Botton
 		[7,0x32],
-		[13,0x06]]
+		[13,0x06],
+		[12,0x00]]
+		
 	// Clear Screen
 	ctx.clearRect(0,0,width,height);
 	// Draw backgound scheme stored in sqbk.
 	scanline = 0;
 	for(colorBK of sqbk){
-		
-		console.log(colorBK);
+		//console.log(colorBK);
 		for(i = 0; i < colorBK[0];i++){
-			scanline++;
-			ctx.fillStyle = tiaColor(colorBK[1]);
+			if((colorBK[0] == 10)&&((seaWaveGenerator>>i)&1 == 1)){
+				ctx.fillStyle = tiaColor(0x92);
+			}else{
+				ctx.fillStyle = tiaColor(colorBK[1]);
+			}
 			ctx.fillRect(0,scanline*canvasScale,width,canvasScale);
-		}	
+			scanline++;
+		}
+			
 	}
 	
 	// Draw playfield;
@@ -101,9 +158,14 @@ function init(){
 	width = cv.width
 	height = cv.height
 	
+	// Token used to draw sea waves.
+	seaToken = 0x08;
+	// Counter used to generate a new seaToken.
+	seaTokenCounter = 0;
+	
 	// Set refresh to 60, like the original Atari 2600 hardware.
-	//updateTimerTimerId = setInterval(frameLoop, 16);
-	frameLoop();
+	updateTimerTimerId = setInterval(frameLoop, 16);
+	//frameLoop();
 	
 }
 
