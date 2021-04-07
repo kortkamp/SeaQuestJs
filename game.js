@@ -60,7 +60,7 @@ class Enemy {
 
 		// Draw this;
 		//drawSprite(subSprite[(frameCounter>>2)%3],this.x,this.y,this.dir,this.color,this.hScale);
-		drawSprite(subSprite[(this.animationCounter>>animationSpeed)%3],this.x,this.y,this.dir,this.color,this.hScale);
+		drawSprite(subSprite[(this.animationCounter>>this.animationSpeed)%3],this.x,this.y,this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
 	checkCollision(player){
