@@ -9,6 +9,7 @@ var lifes;
 var oxygen;
 var rescuedDivers;
 var maxOxygenBar = 64;
+var objects = [];
 
 
 class Enemy {
@@ -33,7 +34,9 @@ class Enemy {
 		this.animationCounter = 0;
 		// Animation speed, pow(animationSpeed,2) means how many frames to update sprite.
 		// Usually can be 2 or 3
+		// bigger means slower
 		this.animationSpeed = 2;
+		this.sprite = sprite;
 	}
 	destroy(){
 		
@@ -60,7 +63,7 @@ class Enemy {
 
 		// Draw this;
 		//drawSprite(subSprite[(frameCounter>>2)%3],this.x,this.y,this.dir,this.color,this.hScale);
-		drawSprite(subSprite[(this.animationCounter>>this.animationSpeed)%3],this.x,this.y,this.dir,this.color,this.hScale);
+		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
 	checkCollision(player){
@@ -241,21 +244,20 @@ function drawBG(){
 }
 
 function frameDraw(){
-	drawBG();
-	
+	drawBG();	
 }
 
 
 function gameLogic(){
 	player.update();
+	for(obj of objects){
+		obj.update();
+	}
 	if(player.y == 39 && oxygen < maxOxygenBar && (frameCounter&1) == 1 )
 		oxygen++;
 	if(player.y > 45 && oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
 		oxygen--;	
-	}
-	//if sub semi suberged oxygen =0;
-	//each 32 frame oxygen--
-	
+	}	
 }
 
 function frameLoop(){
@@ -315,6 +317,12 @@ function init(){
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
 	player = new Enemy(subSprite,76,39,0x18,2);
+	
+	diver = new Enemy(subSprite,0,100,0x18,1);
+	
+	diver.vx = 3/8;
+	diver.animationSpeed = 2;
+	objects.push(diver);
 	//frameLoop();
 	
 	window.addEventListener('keydown',playerMove,false);
