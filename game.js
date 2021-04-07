@@ -24,10 +24,64 @@ var scanlines = 192;
 var canvasScale = 3;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
+var score;
+var lifes;
+var x = 76;
+var y = 39;
+var vx = 0;
+var vy = 0;
+
+class Enemy {
+	constructor(sprite,x,y,color,hScale){
+		// Coord position XY
+		this.x = x;
+		this.y = y;
+		
+		// Speed X and Y
+		this.vx = 0;
+		this.vy = 0;
+		
+		this.collor = color;
+		// Horizontal Scale
+		this.hScale = hScale;
+		// Default direction will be 1(left to right)
+		this.dir = 1;
+		// This sprite has 
+		this.moveLimit = true;
+		
+		// Haw many frames to draw a new sprite animation.
+		this.animationInterval = 4;
+		// Internal counter to do the animation.
+		this.animationCounter = 0;
+		
+	}
+	update(){
+		this.y += this.vy;
+		this.x += this.vx;
+		
+				
+		if(this.x >= 134){
+			this.x = 134;
+		}
+		if(this.x <= 21){
+			this.x = 21;
+		}
+		if(this.y >= 134){
+			this.y = 134;
+		}
+		if(this.y <= 39){
+			this.y = 39;
+		}
+		
+	}
+	checkCollision(player){
+		return false;
+	}
+}
 
 
 
-window.onload = init();
+
 
 
 // Converts a HEX RIA pallete code to RGB format.
@@ -77,7 +131,7 @@ loop:
 
 // Sub Sprite
 // Can you see a sub here ??
-subSprite = [
+const subSprite = [
 	[
 	0b00000100,
 	0b00001100,
@@ -116,12 +170,136 @@ subSprite = [
 	0b00000000],
 ];
 
+// Mini Sub ico
+lifeIco = [
+	0b00000100,
+	0b00001100,
+	0b00001100,
+	0b10111110,
+	0b11111110,
+	0b11111110,
+	0b11111100,
+	0b10000000
+];
+
+numberSprite = [
+	[// 0 
+	0b00111100,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b00111100
+	],
+	[// 1 
+	0b00011000,
+	0b00111000,
+	0b00011000,
+	0b00011000,
+	0b00011000,
+	0b00011000,
+	0b00011000,
+	0b00111100
+	],
+	[// 2
+	0b00111100,
+	0b01000110,
+	0b00000110,
+	0b00000110,
+	0b00111100,
+	0b01100000,
+	0b01100000,
+	0b01111110
+	],
+	[// 3
+	0b00111100,
+	0b01000110,
+	0b00000110,
+	0b00001100,
+	0b00001100,
+	0b00000110,
+	0b01000110,
+	0b00111100,
+	],
+	[// 4
+	0b00001100,
+	0b00011100,
+	0b00101100,
+	0b01001100,
+	0b01111110,
+	0b00001100,
+	0b00001100,
+	0b00001100
+	],
+	[// 5
+	0b01111110,
+	0b01100000,
+	0b01100000,
+	0b01111100,
+	0b00000110,
+	0b00000110,
+	0b01000110,
+	0b01111100
+	],
+	[// 6
+	0b00111100,
+	0b01100010,
+	0b01100000,
+	0b01111100,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b00111100
+	],
+	[// 7
+	0b01111110,
+	0b01000010,
+	0b00000110,
+	0b00001100,
+	0b00011000,
+	0b00011000,
+	0b00011000,
+	0b00011000
+	],
+	[// 8
+	0b00111100,
+	0b01100110,
+	0b01100110,
+	0b00111100,
+	0b00111100,
+	0b01100110,
+	0b01100110,
+	0b00111100,
+	],
+	[// 9
+	0b00111100,
+	0b01100110,
+	0b01100110,
+	0b01100110,
+	0b00111110,
+	0b00000110,
+	0b01000110,
+	0b00111100
+	],
+
+];
+
 function drawSprite(sprite,x,y,dir,color,hScale){
-    for(line in sprite){
+	// Actually X Canvas position based in Atari x position.
+	xCanvas = x*2*canvasScale;
+	// Actually Y Canvas position based in Atari Y position.
+	yCanvas = y*canvasScale;
+    for(line = 0 ; line < sprite.length; line++){
+		// Set the color to entire line as in Atari 2600 hardware.
 		ctx.fillStyle = tiaColor(color);
-		for(var i = 0; i<8;i++){
-			if(((sprite[line]<<i)&0x80)==0x80){
-				ctx.fillRect(x+2*i*hScale*canvasScale,y+line*canvasScale,2*hScale*canvasScale,canvasScale);
+		// If sprite are in sea line discard 4 draw lines.
+		if(y + line < 46 || y + line > 49){
+			for(var i = 0; i<8;i++){
+				if(((sprite[line]<<i)&0x80)==0x80){
+					ctx.fillRect(x*2*canvasScale+2*i*hScale*canvasScale,y*canvasScale+line*canvasScale,2*hScale*canvasScale,canvasScale);
+				}
 			}
 		}
 	}
@@ -180,13 +358,29 @@ function drawBG(){
 	
 	
 	// Draw Player;
-	drawSprite(subSprite[(frameCounter>>2)%3],200,200,1,0x18,2);
+	drawSprite(subSprite[(frameCounter>>2)%3],player.x,player.y,1,0x18,2);
 	
 	
-	for(i = 0 ; i < scanlines; i++){
-		//ctx.fillStyle = tiaColor(0x84);
-		//ctx.fillRect(0,i*canvasScale,width,canvasScale);
+	// Draw Score
+	for(i = 5; i >= 0; i--){
+		digit = Math.floor(score/Math.pow(10,i))%10;
+		if(digit > 0 || i == 0 ){
+			drawSprite(numberSprite[digit],66+32-i*8,2,1,0x1A,1);
+		}
+		
 	}
+	
+	
+	
+	// Draw life ico.
+	for(i = 0; i< lifes; i++ ){
+		drawSprite(lifeIco,66-8 + i * 8,15,1,0x1A,1);
+	}
+	// 
+	ctx.fillStyle = tiaColor(0x00);
+	ctx.fillRect(0,0,16*canvasScale,height);
+	
+	
 	// Update the frame counter.
 	frameCounter++;
 	// Each 8 frames update the Sea Waves Token;
@@ -201,7 +395,7 @@ function frameDraw(){
 
 
 function gameLogic(){
-	
+	player.update();
 	
 }
 
@@ -211,6 +405,31 @@ function frameLoop(){
 	
 }
 
+function playerMove(e){
+	
+	var code = e.keyCode;
+	if(e.type == "keydown")
+		switch (code) {
+			case 37: 
+				player.vx = -1; 
+				player.dir = -1;
+				break; //Left key
+			
+			case 38: player.vy = -1; break; //Up key
+			case 39: 
+				player.vx = 1; 
+				player.dir = 1;
+				break; //Right key
+			case 40: player.vy = 1; break; //Down key     
+		}
+	if(e.type == "keyup")
+		switch (code) {
+			case 37: player.vx = 0; break; //Left key
+			case 38: player.vy = 0; break; //Up key
+			case 39: player.vx = 0; break; //Right key
+			case 40: player.vy = 0; break; //Down key     
+		}
+}
 
 function init(){
 	
@@ -221,15 +440,21 @@ function init(){
 	seaToken = 0x08;
 	// Counter used to generate a new seaToken.
 	seaTokenCounter = 0;
+	score = 20;
+	lifes = 3;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
 	
+	player = new Enemy(subSprite,x,y,0x18,2);
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
 	//frameLoop();
 	
+	window.addEventListener('keydown',playerMove,false);
+	window.addEventListener('keyup',playerMove,false);
 }
 
 
+window.onload = init();
 
