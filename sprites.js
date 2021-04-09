@@ -1,5 +1,6 @@
 // Sprites
 
+const spriteWidth = 8;
 // Sub Sprite
 // Can you see a sub here ??
 const subSprite = [
@@ -151,6 +152,12 @@ lifeIco = [
 	0b11111110,
 	0b11111100,
 	0b10000000
+];
+
+singleTorpedoSprite = [
+	[0b1111111],
+	[0b1111111],
+	[0b1111111]
 ];
 
 numberSprite = [

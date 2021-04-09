@@ -5,12 +5,26 @@ TODO
 
 - oxygen precisa ser uma propriedade de player assim como as checkagens de profundidade para recarregar ou gastar oxigênio.
 
+- issue - digito zero não imprime no score.
+
 */
 
-// Equivalent to Atari Screen Height.
-const scanlines = 192;
-// Equivalent to Atati Screen Width.
-const colorClocks = 160;
+
+var colorClosks =160;
+const atariScreen = {
+	// Atari equivalent Screen Height.
+	'scanlines':192,
+	'height':192,
+	// Atari equivalent Screen Width.
+	'colorClocks':160,
+	'width':160
+};
+
+
+var enemyId = {
+	'shark':0,
+	'sub':1
+};
 
 var canvasScale = 3;
 var cv = document.getElementById("gameCanvas");
@@ -30,7 +44,7 @@ var enemyLanes = [61,85,109,133];
 // Ready for game, oxygen full.
 
 // In Sea Quest the enemy colors change as dificulty increases.
-// colors[0] represents the shark colors and colors[1] the sub ones.
+// enemyColors[0] represents the shark colors and enemyColors[1] the sub ones.
 // these are cicling array, when dificulty rises to the last element the next muust be the first.
 var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36], 
 					[0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08]];
@@ -41,6 +55,7 @@ var enemySpeeds = [];
 var inGame = false;
 
 
+// Generic objct to extends: player , enemy, diver , torpedo.
 class GameObject {
 	constructor(sprite,x,y,color,dir){
 		// Coord position XY
@@ -61,7 +76,7 @@ class GameObject {
 		this.animationInterval = 4;
 		// Internal counter to do the animation.
 		this.animationCounter = 0;
-		// Animation speed, pow(animationSpeed,2) means how many frames to update sprite.
+		// Animation speed, Math.pow(animationSpeed,2) means how many frames are needed to update a single sprite.
 		// Usually can be 2 or 3
 		// bigger means slower
 		this.animationSpeed = 2;
@@ -79,18 +94,77 @@ class GameObject {
 		
 		this.checkLimits();	
 
-		// Draw this;
-		//drawSprite(subSprite[(frameCounter>>2)%3],this.x,this.y,this.dir,this.color,this.hScale);
 		
-		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
+		var spriteNumber = (this.animationCounter>>this.animationSpeed)%3;
+		drawSprite(this.sprite[spriteNumber],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
-	checkCollision(player){
+	// Checks for a colision with another GameObject
+	checkCollision(object){
+		// horizontal contact
+		if((this.x + this.hScale * 8) >= object.x && this.x <= (object.x + object.hScale*8)) {
+			console.log("h contact");
+			if((this.y + this.sprite[0].length) >= object.y && this.y <= object.y + object.sprite[0].length){
+				// Must insert a pixel colision here.
+				this.colisionAction(object);
+				
+			}
+		}
 		return false;
 	}
+	colisionAction(object){
+		
+	}
+	
 
 }
 
+class Torpedo extends GameObject{
+	constructor(parentLaucher,x,y,dir){
+		super(singleTorpedoSprite,x,y,0x18,2);
+		
+		this.parentLaucher = parentLaucher;
+		this.speed = 5;
+		this.hScale = 1;
+		this.dir = dir;
+		this.vx = this.dir*this.speed;
+		this.active = false;
+	}
+	update(){
+		this.y = this.parentLaucher.y + 7;
+		this.x += this.vx;
+		
+		this.checkLimits();	
+
+		
+		drawSprite(this.sprite[0],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
+	}
+	checkLimits(){
+		
+		if(this.x >= atariScreen.width || (this.x + spriteWidth <= 0 )){
+			this.halt();
+		}
+		
+	}
+	colisionAction(object){
+		object.kill();
+		this.halt();
+	}
+	halt(){
+		
+		this.active = false;
+	}
+	fire(){
+		
+		if(!this.active){
+			this.dir = this.parentLaucher.dir;
+			this.vx = this.dir*this.speed;
+			this.y = this.parentLaucher.y + 7;
+			this.x = this.parentLaucher.x + 6*this.parentLaucher.hScale + 1;
+			this.active = true;
+		}
+	}
+}
 
 class Player extends GameObject{
 	constructor(x,y){
@@ -119,10 +193,10 @@ class Enemy extends GameObject{
 		super(null,null,y,null,null);
 		
 		// 0 = shark and 1 = sub
-		this.enemyType = 0;
+		this.enemyType = enemyId.shark;
 		//this.dir = dir;
 		//this.vx = this.dir * 3/8;
-		this.startPoint = [-55,0,colorClocks + 55];
+		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
 		//this.x = this.startPoint[1-dir];
 		//this.animationSpeed = 3;
 		this.reset();
@@ -133,13 +207,13 @@ class Enemy extends GameObject{
 		
 		this.checkLimits();	
 		
-		this.color = colors[this.enemyType][dificulty%8];
+		this.color = enemyColors[this.enemyType][dificulty%8];
 		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
 	
 	checkLimits(){
-		if((this.x > colorClocks+33) && (this.dir == 1)){
+		if((this.x > atariScreen.colorClocks+33) && (this.dir == 1)){
 			// Alternate between shark and sub
 			this.enemyType = this.enemyType ^ 1;
 			
@@ -157,7 +231,7 @@ class Enemy extends GameObject{
 	}
 	kill(){
 		// When you kill a enemy , he resets to a shark.
-		this.enemyType = 0;	
+		this.enemyType = enemyId.shark;	
 		this.reset();	
 		score += 20;
 		
@@ -250,15 +324,8 @@ function drawSprite(sprite,x,y,dir,color,hScale){
 }
 
 function drawBG(){	
-	/*if(seaTokenCounter == 7){
-		seaToken = shuffle(seaToken);
-		seaTokenCounter = 0;
-	}else{
-		seaTokenCounter++;
-	}*/
 	seaWaveGenerator = ((seaToken&1)<<9) + (seaToken<<1) + (seaToken>>7) ;
-	//console.log( " " + seaToken.toString(2).padStart(8,'0'));
-	//console.log(seaWaveGenerator.toString(2).padStart(10,'0'));
+	
 	// SeaQuest Background color.
 	sqbk =
 		[[26,0x84], // Sky
@@ -298,9 +365,6 @@ function drawBG(){
 	
 	// Draw playfield;
 	
-	// Draw Player;
-	//drawSprite(subSprite[(frameCounter>>2)%3],player.x,player.y,player.dir,0x18,2);
-	
 	
 	// Draw Score
 	for(i = 5; i >= 0; i--){
@@ -311,13 +375,10 @@ function drawBG(){
 		
 	}
 	
-	
-	
 	// Draw life ico.
 	for(i = 0; i< lifes; i++ ){
 		drawSprite(lifeIco,66-8 + i * 8,15,1,0x1A,1);
 	}
-	
 	
 	// Draw seabed mountains
 	var montain = [ 3,2,1,0,0,1,2,3];
@@ -326,8 +387,7 @@ function drawBG(){
 		ctx.fillRect(i*8*canvasScale,154*canvasScale,8*canvasScale,canvasScale*montain[i%8]);
 	}
 	
-	
-	// Draw Oxygen Sprite
+	// Draw Oxygen bar
 	for(i = 0; i < 3; i++)
 		drawSprite(oxygenSprite[i], 15 + i*8 ,163,1,0x00,1);
 	// Draw Oxygen Bar
@@ -341,8 +401,6 @@ function drawBG(){
 		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
 	}
 	
-
-	
 	// Update the frame counter.
 	frameCounter++;
 	// Each 8 frames update the Sea Waves Token;
@@ -353,44 +411,15 @@ function drawBG(){
 function frameDraw(){
 	drawBG();	
 }
-//3/(3+3+2) speed shark
-//3/(3+3+2) speed sub
-
-// destruction
-// 0383 0531 = 148
-//fade
-// 1446 1682 = 236
-// atraso
-// 1447 1767 = 320
-// pode aparecer com atraso de 84 frames ou 31 colorclocks
-
-//7228 7377 shark	149	
-//7396 7542 shark R 146
-//7597 7745 shark L 148
-//7785 7931 shark R 146
-//8660 
-
-//sumiu 
-//6227 6461 sub R
-//	   6546 sub R
-
-/*
-8418 8567
-*/
-/*	conclusions about enemy timming:
-
-	33 colorclocks fora da tela o enemy reseta e alterna entre shark e sub
-
-	Quando o enemy é morto , ele reseta sempre para shark
-
-	the shark are always fallowed by sub an vice versa
-	the firts type that apears is always 4 shark
-	a sub apears 236 frames afer a shark hydes
-	
-*/
 
 function gameLogic(){
 	player.update();
+	if(torpedo.active){
+		torpedo.update();
+		//check Colisions
+		for(obj of enemies)
+			torpedo.checkCollision(obj);
+	}
 	for(obj of enemies){
 		if(obj != undefined)
 			obj.update();
@@ -401,6 +430,7 @@ function gameLogic(){
 		oxygen--;	
 	}	
 	
+	// Wait for the oxygen bar become full.
 	if((oxygen == maxOxygenBar) && (inGame == false)){
 		for(i = 0;i< 4;i++){
 			enemies[i] = new Enemy(enemyLanes[i]);
@@ -409,6 +439,8 @@ function gameLogic(){
 		window.addEventListener('keyup',playerMove,false);
 		inGame = true;
 	}
+	
+
 	
 }
 
@@ -429,7 +461,7 @@ function playerMove(e){
 	if(e.type == "keydown")
 		switch (code) {
 			case 32:
-				//player.fire()
+				torpedo.fire(player);
 				break;
 			case 37: 
 				player.vx = -1; 
@@ -470,19 +502,12 @@ function init(){
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
 	
-	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
 	player = new Player(76,39);
-	
-
-	
-	
-	
-	
-	
+	torpedo = new Torpedo(player,0,0,1);
+		
 	//frameLoop();
-	
 	
 }
 

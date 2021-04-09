@@ -33,4 +33,8 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 06/04/2021
 	* Foi adicionada a funçao para desenhar os sprites na tela assim como os dados e posições dos pinrcipais sprites.
 	
-
+* 07/04/2021 a 08/04/2021
+	* Nesse período me sobrou um pouco mais de tempo livre e o projeto avançou muito. Fiz algumas verificações de posicionamento do inimigos assim como, em abediência ao OCP do SOLID , isolei a classe antes usada para todos os objetos móveis e a extendi para uma classe player e uma enemy. Essa solução facilitou muito o projeto porque todas as rotinas de inicialização dos inimigos pôde ser embutida em sua classe simplificando muito o código.
+* 08/04/2021 
+	-Colisões
+	* A próxima implementação será o do detector de colisões que será usado na classe player , na classe diver e na futura classe torpedo. Aqui certamente teremos problemas porque a detecção de colosão no atari era pixel perfect, ou seja não trabalhava com hitbox e sim fazia a detecção pixel por pixel, então se o Atari 2600 disser que um tiro te acertou é porque é verdade. Eu quero implementar esse tipo de checador no meu projeto devido ao objetivo principal que fazer uma cópia perfeita do Sea Quest.
