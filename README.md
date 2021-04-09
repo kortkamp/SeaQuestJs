@@ -1,6 +1,6 @@
 # SeaQuestJs
 
-[Run the Game]([https://kortkamp.github.io/SeaQuestJs/)
+[Run the Game](https://kortkamp.github.io/SeaQuestJs/)
 
 
 # Instructions
