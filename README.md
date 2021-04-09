@@ -1,5 +1,14 @@
 # SeaQuestJs
 
+[Run the Game]([https://kortkamp.github.io/SeaQuestJs/)
+
+
+# Instructions
+*	Use arroys keys to move and space to shot
+
+
+
+# Jounal (Sorry, just in portuguese)
 
 Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um clone de um dos melhores jogos do Atari 2600, o belíssimo jogo da Activision, Sea Quest.
 
@@ -38,3 +47,5 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 08/04/2021 
 	-Colisões
 	* A próxima implementação será o do detector de colisões que será usado na classe player , na classe diver e na futura classe torpedo. Aqui certamente teremos problemas porque a detecção de colosão no atari era pixel perfect, ou seja não trabalhava com hitbox e sim fazia a detecção pixel por pixel, então se o Atari 2600 disser que um tiro te acertou é porque é verdade. Eu quero implementar esse tipo de checador no meu projeto devido ao objetivo principal que fazer uma cópia perfeita do Sea Quest.
+* 09/04/2021
+	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe 

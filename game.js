@@ -25,16 +25,22 @@ var enemyId = {
 	'shark':0,
 	'sub':1
 };
+const startPlayerPosition = {
+	'x':76,
+	'y':39
+	
+};
 
 var canvasScale = 3;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
 
 var score;
-var lifes;
-var oxygen;
+var lifesCounter;
+
+
 //Dificulty , aka speed of the game.
-var dificulty;
+var gameDificulty;
 var rescuedDivers;
 // Max oxygen used do draw oxygen bar.
 var maxOxygenBar = 64;
@@ -49,7 +55,7 @@ var enemyLanes = [61,85,109,133];
 var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36], 
 					[0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08]];
 // Like enemyColors , enemySpeeds chages as dificulty increases.
-var enemySpeeds = [];
+var enemySpeeds = [3/8	,	3/7,	8/14,	5/8,	11/16,	3/4,	13/16];
 
 
 var inGame = false;
@@ -88,12 +94,15 @@ class GameObject {
 	checkLimits(){
 		
 	}
+	checkInternals(){
+		
+	}
 	update(){
 		this.y += this.vy;
 		this.x += this.vx;
 		
 		this.checkLimits();	
-
+		this.checkInternals();
 		
 		var spriteNumber = (this.animationCounter>>this.animationSpeed)%3;
 		drawSprite(this.sprite[spriteNumber],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
@@ -103,7 +112,7 @@ class GameObject {
 	checkCollision(object){
 		// horizontal contact
 		if((this.x + this.hScale * 8) >= object.x && this.x <= (object.x + object.hScale*8)) {
-			console.log("h contact");
+			
 			if((this.y + this.sprite[0].length) >= object.y && this.y <= object.y + object.sprite[0].length){
 				// Must insert a pixel colision here.
 				this.colisionAction(object);
@@ -167,9 +176,11 @@ class Torpedo extends GameObject{
 }
 
 class Player extends GameObject{
-	constructor(x,y){
-		super(subSprite,x,y,0x18,2);
+	constructor(){
+		
+		super(subSprite,startPlayerPosition.x,startPlayerPosition.y,0x18,2);
 		this.hScale = 2;
+		this.oxygen = 0;
 	}
 	// Player must not pass these limits, ask Activion about this.
 	checkLimits(){
@@ -185,6 +196,23 @@ class Player extends GameObject{
 		if(this.y <= 39){
 			this.y = 39;
 		}
+	}
+	checkInternals(){
+		// Y measures depth
+		if(this.oxygen == 0 && this.y > startPlayerPosition.y)
+			this.destroyPlayer();
+	}
+	colisionAction(object){
+		this.destroyPlayer();
+	}
+	// Decrease a lifecouter, resets player and enemies
+	destroyPlayer(){
+		lifesCounter--;
+		this.x = 76;
+		this.y = 39;
+		for(obj of enemies)
+			obj.reset();
+		
 	}
 }
 
@@ -207,7 +235,7 @@ class Enemy extends GameObject{
 		
 		this.checkLimits();	
 		
-		this.color = enemyColors[this.enemyType][dificulty%8];
+		this.color = enemyColors[this.enemyType][gameDificulty%8];
 		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
@@ -218,7 +246,7 @@ class Enemy extends GameObject{
 			this.enemyType = this.enemyType ^ 1;
 			
 			this.dir = binaryRandom();
-			this.vx = this.dir * 3/8;
+			this.vx = this.dir * enemySpeeds[gameDificulty];
 			this.x = this.startPoint[1-this.dir];
 			this.sprite = enemySprites[this.enemyType];
 			
@@ -240,7 +268,7 @@ class Enemy extends GameObject{
 		//Direction is randomized every enemy reset.
 		this.dir = binaryRandom();
 		//Vx must follow  "dir" direction.
-		this.vx = this.dir * 3/8;
+		this.vx = this.dir * enemySpeeds[gameDificulty];
 		// The initial position depends on direction.
 		this.x = this.startPoint[1-this.dir];
 		// Basic animation speed depends on enemy type. Subs have 2 and sharks 3.
@@ -376,7 +404,7 @@ function drawBG(){
 	}
 	
 	// Draw life ico.
-	for(i = 0; i< lifes; i++ ){
+	for(i = 0; i< lifesCounter; i++ ){
 		drawSprite(lifeIco,66-8 + i * 8,15,1,0x1A,1);
 	}
 	
@@ -388,16 +416,17 @@ function drawBG(){
 	}
 	
 	// Draw Oxygen bar
+	// TODO , blinking bar when oxygen reachas 10 or <
 	for(i = 0; i < 3; i++)
 		drawSprite(oxygenSprite[i], 15 + i*8 ,163,1,0x00,1);
 	// Draw Oxygen Bar
 	ctx.fillStyle = tiaColor(0x32);
 	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* maxOxygenBar * canvasScale,5*canvasScale);
 	ctx.fillStyle = tiaColor(0x0C);
-	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* oxygen * canvasScale,5*canvasScale);
+	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* player.oxygen * canvasScale,5*canvasScale);
 	
 	// Draw rescued divers
-	for(i = 0; i< lifes; i++ ){
+	for(i = 0; i< rescuedDivers; i++ ){
 		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
 	}
 	
@@ -413,7 +442,11 @@ function frameDraw(){
 }
 
 function gameLogic(){
-	player.update();
+	if(lifesCounter > 0){
+		player.update();
+		for(obj of enemies)
+			player.checkCollision(obj);
+	}
 	if(torpedo.active){
 		torpedo.update();
 		//check Colisions
@@ -424,14 +457,14 @@ function gameLogic(){
 		if(obj != undefined)
 			obj.update();
 	}
-	if(player.y == 39 && oxygen < maxOxygenBar && (frameCounter&1) == 1 )
-		oxygen++;
-	if(player.y > 45 && oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
-		oxygen--;	
+	if(player.y == 39 && player.oxygen < maxOxygenBar && (frameCounter&1) == 1 )
+		player.oxygen++;
+	if(player.y > 45 && player.oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
+		player.oxygen--;	
 	}	
 	
 	// Wait for the oxygen bar become full.
-	if((oxygen == maxOxygenBar) && (inGame == false)){
+	if((player.oxygen == maxOxygenBar) && (inGame == false)){
 		for(i = 0;i< 4;i++){
 			enemies[i] = new Enemy(enemyLanes[i]);
 		}
@@ -494,17 +527,17 @@ function init(){
 	// Counter used to generate a new seaToken.
 	seaTokenCounter = 0;
 	score = 0;
-	lifes = 3;
+	lifesCounter = 3;
 	oxygen = 0;
 	rescuedDivers = 3;
-	dificulty = 0;
+	gameDificulty = 0;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
-	player = new Player(76,39);
+	player = new Player();
 	torpedo = new Torpedo(player,0,0,1);
 		
 	//frameLoop();
