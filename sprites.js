@@ -138,6 +138,9 @@ sharkSprite = [
 	]
 ];
 
+enemySprites = [sharkSprite,subSprite];
+
+
 // Mini Sub ico
 lifeIco = [
 	0b00000100,

@@ -1,19 +1,48 @@
+/*
+TODO
+- seria interessante criar uma classe para o campo e o score e as vidas seriam propriedade dessa classe
+  nesse modo teríamos que passa-la como parametro para os enemies já que os mesmos alteram o score.
 
+- oxygen precisa ser uma propriedade de player assim como as checkagens de profundidade para recarregar ou gastar oxigênio.
 
-var scanlines = 192;
+*/
+
+// Equivalent to Atari Screen Height.
+const scanlines = 192;
+// Equivalent to Atati Screen Width.
+const colorClocks = 160;
+
 var canvasScale = 3;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
+
 var score;
 var lifes;
 var oxygen;
+//Dificulty , aka speed of the game.
+var dificulty;
 var rescuedDivers;
+// Max oxygen used do draw oxygen bar.
 var maxOxygenBar = 64;
-var objects = [];
+var enemies = []
+// Y position for each of 4 lines of enemies.
+var enemyLanes = [61,85,109,133];
+// Ready for game, oxygen full.
+
+// In Sea Quest the enemy colors change as dificulty increases.
+// colors[0] represents the shark colors and colors[1] the sub ones.
+// these are cicling array, when dificulty rises to the last element the next muust be the first.
+var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36], 
+					[0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08]];
+// Like enemyColors , enemySpeeds chages as dificulty increases.
+var enemySpeeds = [];
 
 
-class Enemy {
-	constructor(sprite,x,y,color,hScale){
+var inGame = false;
+
+
+class GameObject {
+	constructor(sprite,x,y,color,dir){
 		// Coord position XY
 		this.x = x;
 		this.y = y;
@@ -23,7 +52,7 @@ class Enemy {
 		this.hScale = 1;
 		this.color = color;
 		// Horizontal Scale
-		this.hScale = hScale;
+		this.hScale = 1;
 		// Default direction will be 1(left to right)
 		this.dir = 1;
 		// This sprite has 
@@ -42,6 +71,34 @@ class Enemy {
 		
 	}
 	checkLimits(){
+		
+	}
+	update(){
+		this.y += this.vy;
+		this.x += this.vx;
+		
+		this.checkLimits();	
+
+		// Draw this;
+		//drawSprite(subSprite[(frameCounter>>2)%3],this.x,this.y,this.dir,this.color,this.hScale);
+		
+		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
+		this.animationCounter++;
+	}
+	checkCollision(player){
+		return false;
+	}
+
+}
+
+
+class Player extends GameObject{
+	constructor(x,y){
+		super(subSprite,x,y,0x18,2);
+		this.hScale = 2;
+	}
+	// Player must not pass these limits, ask Activion about this.
+	checkLimits(){
 		if(this.x >= 134){
 			this.x = 134;
 		}
@@ -55,24 +112,76 @@ class Enemy {
 			this.y = 39;
 		}
 	}
+}
+
+class Enemy extends GameObject{
+	constructor(y){
+		super(null,null,y,null,null);
+		
+		// 0 = shark and 1 = sub
+		this.enemyType = 0;
+		//this.dir = dir;
+		//this.vx = this.dir * 3/8;
+		this.startPoint = [-55,0,colorClocks + 55];
+		//this.x = this.startPoint[1-dir];
+		//this.animationSpeed = 3;
+		this.reset();
+	}
 	update(){
 		this.y += this.vy;
 		this.x += this.vx;
 		
 		this.checkLimits();	
-
-		// Draw this;
-		//drawSprite(subSprite[(frameCounter>>2)%3],this.x,this.y,this.dir,this.color,this.hScale);
+		
+		this.color = colors[this.enemyType][dificulty%8];
 		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
 		this.animationCounter++;
 	}
-	checkCollision(player){
-		return false;
+	
+	checkLimits(){
+		if((this.x > colorClocks+33) && (this.dir == 1)){
+			// Alternate between shark and sub
+			this.enemyType = this.enemyType ^ 1;
+			
+			this.dir = binaryRandom();
+			this.vx = this.dir * 3/8;
+			this.x = this.startPoint[1-this.dir];
+			this.sprite = enemySprites[this.enemyType];
+			
+		};
+		if((this.x < -33) && (this.dir == -1)){
+			// Alternate between shark and sub
+			this.enemyType = this.enemyType ^ 1;
+			this.reset();
+		};
 	}
-
+	kill(){
+		// When you kill a enemy , he resets to a shark.
+		this.enemyType = 0;	
+		this.reset();	
+		score += 20;
+		
+	}
+	reset(){
+		//Direction is randomized every enemy reset.
+		this.dir = binaryRandom();
+		//Vx must follow  "dir" direction.
+		this.vx = this.dir * 3/8;
+		// The initial position depends on direction.
+		this.x = this.startPoint[1-this.dir];
+		// Basic animation speed depends on enemy type. Subs have 2 and sharks 3.
+		this.animationSpeed = 3-this.enemyType;
+		// Update the enemy sprite. 0 for shark and 1 for sub.
+		this.sprite = enemySprites[this.enemyType];
+	}
 }
 
-
+// returns randomically -1 or 1
+function binaryRandom(){
+	if(Math.random() > 0.5)
+		return(1);
+	return(-1);
+}
 
 // This function emulates the exact behavior of Sea Quest shuffle routine at memory address 0xFEDB.
 function shuffle(value){
@@ -232,9 +341,7 @@ function drawBG(){
 		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
 	}
 	
-	// Draw left black offset
-	ctx.fillStyle = tiaColor(0x00);
-	ctx.fillRect(0,0,16*canvasScale,height);
+
 	
 	// Update the frame counter.
 	frameCounter++;
@@ -246,24 +353,73 @@ function drawBG(){
 function frameDraw(){
 	drawBG();	
 }
+//3/(3+3+2) speed shark
+//3/(3+3+2) speed sub
 
+// destruction
+// 0383 0531 = 148
+//fade
+// 1446 1682 = 236
+// atraso
+// 1447 1767 = 320
+// pode aparecer com atraso de 84 frames ou 31 colorclocks
+
+//7228 7377 shark	149	
+//7396 7542 shark R 146
+//7597 7745 shark L 148
+//7785 7931 shark R 146
+//8660 
+
+//sumiu 
+//6227 6461 sub R
+//	   6546 sub R
+
+/*
+8418 8567
+*/
+/*	conclusions about enemy timming:
+
+	33 colorclocks fora da tela o enemy reseta e alterna entre shark e sub
+
+	Quando o enemy é morto , ele reseta sempre para shark
+
+	the shark are always fallowed by sub an vice versa
+	the firts type that apears is always 4 shark
+	a sub apears 236 frames afer a shark hydes
+	
+*/
 
 function gameLogic(){
 	player.update();
-	for(obj of objects){
-		obj.update();
+	for(obj of enemies){
+		if(obj != undefined)
+			obj.update();
 	}
 	if(player.y == 39 && oxygen < maxOxygenBar && (frameCounter&1) == 1 )
 		oxygen++;
 	if(player.y > 45 && oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
 		oxygen--;	
 	}	
+	
+	if((oxygen == maxOxygenBar) && (inGame == false)){
+		for(i = 0;i< 4;i++){
+			enemies[i] = new Enemy(enemyLanes[i]);
+		}
+		window.addEventListener('keydown',playerMove,false);
+		window.addEventListener('keyup',playerMove,false);
+		inGame = true;
+	}
+	
 }
 
 function frameLoop(){
 	
 	frameDraw();
 	gameLogic();
+	
+	// Draw left black offset to simulate Horizontal Blank
+	ctx.fillStyle = tiaColor(0x00);
+	ctx.fillRect(0,0,8*2*canvasScale,height);
 }
 
 function playerMove(e){
@@ -309,6 +465,7 @@ function init(){
 	lifes = 3;
 	oxygen = 0;
 	rescuedDivers = 3;
+	dificulty = 0;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
@@ -316,17 +473,17 @@ function init(){
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
-	player = new Enemy(subSprite,76,39,0x18,2);
+	player = new Player(76,39);
 	
-	diver = new Enemy(subSprite,0,100,0x18,1);
+
 	
-	diver.vx = 3/8;
-	diver.animationSpeed = 2;
-	objects.push(diver);
+	
+	
+	
+	
 	//frameLoop();
 	
-	window.addEventListener('keydown',playerMove,false);
-	window.addEventListener('keyup',playerMove,false);
+	
 }
 
 
