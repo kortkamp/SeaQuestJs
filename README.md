@@ -4,7 +4,7 @@
 
 
 # Instructions
-*	Use arroys keys to move and space to shot
+*	Use arroys keys to move and space to shoot
 
 
 
