@@ -27,11 +27,16 @@ var enemyId = {
 	'shark':0,
 	'sub':1
 };
+
+const surfaceYposition = 39;
+
 const startPlayerPosition = {
 	'x':76,
 	'y':39
 	
 };
+
+
 
 var canvasScale = 3;
 var cv = document.getElementById("gameCanvas");
@@ -57,7 +62,7 @@ var enemyLanes = [61,85,109,133];
 var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36], 
 					[0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08]];
 // Like enemyColors , enemySpeeds chages as dificulty increases.
-var enemySpeeds = [3/8	,	3/7,	8/14,	5/8,	11/16,	3/4,	13/16];
+var enemySpeeds = [3/8	,	3/7,	8/14,	5/8,	11/16,	3/4,	13/16, 1,1,1,1,1,1,1,1,1,1];
 
 
 var inGame = false;
@@ -183,8 +188,13 @@ class Player extends GameObject{
 	constructor(){
 		
 		super(subSprite,startPlayerPosition.x,startPlayerPosition.y,0x18,2);
+		this.baseSpeed = 1;
 		this.hScale = 2;
 		this.oxygen = 0;
+		this.divers;
+		//this.refitingOxygen = true;
+		//this.deliveringDivers = false;
+		this.subStillSurfaced = true;
 	}
 	// Player must not pass these limits, ask Activion about this.
 	checkLimits(){
@@ -198,8 +208,14 @@ class Player extends GameObject{
 			this.y = 134;
 		}
 		if(this.y <= 39){
+			this.refitOxygen();
+			this.deliverDivers();
 			this.y = 39;
 		}
+		if(this.y > 45 && this.oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
+			this.oxygen--;	
+			this.subStillSurfaced = false;
+		}	
 	}
 	checkInternals(){
 		// Y measures depth
@@ -207,20 +223,57 @@ class Player extends GameObject{
 			this.destroyPlayer();
 	}
 	colisionAction(object){
+		object.reset();
 		this.destroyPlayer();
 	}
 	// Decrease a lifecouter, resets player and enemies
 	destroyPlayer(){
+		// here we must animate player destruction
+		// Memo , sharks must not stop oscilation during this animation
+		
+		
+		this.subStillSurfaced = true;
 		lifesCounter--;
-		this.x = 76;
-		this.y = 39;
+		this.resetPosition();
 		for(obj of enemies)
 			obj.reset();
 		
 	}
+	resetPosition(){
+		this.x = 76;
+		this.y = 39;
+		this.dir = 1;
+		
+	}
+	refitOxygen(){
+		this.refitingOxygen = false;
+		if(this.oxygen < maxOxygenBar){
+			player.oxygen += 0.5;
+			this.refitingOxygen = true;
+		}else{
+			
+		}
+	}
+	/*
+	rescueDiver(){
+		this.divers ++;
+		
+	}
+	*/
 	deliverDivers(){
-		
-		
+		// If previously the sub was not surfaced.
+		// Need this to prevent a loop o delivering divers.
+		if(!this.subStillSurfaced){
+			if(this.divers>0){
+				this.divers--;
+				gameDificulty++;
+			}
+			else{
+				this.destroyPlayer();
+				
+			}
+			this.subStillSurfaced = true;
+		}
 	}
 }
 
@@ -254,7 +307,7 @@ class Enemy extends GameObject{
 			this.enemyType = this.enemyType ^ 1;
 			
 			this.dir = binaryRandom();
-			this.vx = this.dir * enemySpeeds[gameDificulty];
+			this.vx = this.dir * enemySpeeds[gameDificulty&0b00001111];
 			this.x = this.startPoint[1-this.dir];
 			this.sprite = enemySprites[this.enemyType];
 			
@@ -434,7 +487,7 @@ function drawBG(){
 	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* player.oxygen * canvasScale,5*canvasScale);
 	
 	// Draw rescued divers
-	for(i = 0; i< rescuedDivers; i++ ){
+	for(i = 0; i< player.divers; i++ ){
 		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
 	}
 	
@@ -462,22 +515,18 @@ function gameLogic(){
 			torpedo.checkCollision(obj);
 	}
 	for(obj of enemies){
-		if(obj != undefined)
-			obj.update();
+		obj.update();
 	}
-	if(player.y == 39 && player.oxygen < maxOxygenBar && (frameCounter&1) == 1 )
-		player.oxygen++;
-	if(player.y > 45 && player.oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
-		player.oxygen--;	
-	}	
+	//if(player.y == 39 && player.oxygen < maxOxygenBar && (frameCounter&1) == 1 )
+	//	player.oxygen++;
+
 	
 	// Wait for the oxygen bar become full.
 	if((player.oxygen == maxOxygenBar) && (inGame == false)){
 		for(i = 0;i< 4;i++){
 			enemies[i] = new Enemy(enemyLanes[i]);
 		}
-		window.addEventListener('keydown',playerMove,false);
-		window.addEventListener('keyup',playerMove,false);
+		
 		inGame = true;
 	}
 	
@@ -500,21 +549,23 @@ function playerMove(e){
 	var code = e.keyCode;
 	//console.log(code);
 	if(e.type == "keydown")
-		switch (code) {
-			case 32:
-				torpedo.fire(player);
-				break;
-			case 37: 
-				player.vx = -1; 
-				player.dir = -1;
-				break; //Left key
-			
-			case 38: player.vy = -1; break; //Up key
-			case 39: 
-				player.vx = 1; 
-				player.dir = 1;
-				break; //Right key
-			case 40: player.vy = 1; break; //Down key     
+		if(!player.refitingOxygen){
+			switch (code) {
+				case 32:
+					torpedo.fire(player);
+					break;
+				case 37: 
+					player.vx = -player.baseSpeed; 
+					player.dir = -1;
+					break; //Left key
+				
+				case 38: player.vy = -player.baseSpeed; break; //Up key
+				case 39: 
+					player.vx = player.baseSpeed; 
+					player.dir = 1;
+					break; //Right key
+				case 40: player.vy = player.baseSpeed; break; //Down key     
+			}
 		}
 	if(e.type == "keyup")
 		switch (code) {
@@ -525,10 +576,9 @@ function playerMove(e){
 		}
 }
 
-function init(){
-	
-	width = cv.width
-	height = cv.height
+
+
+function startGame(){
 	
 	// Token used to draw sea waves.
 	seaToken = 0x08;
@@ -537,17 +587,34 @@ function init(){
 	score = 0;
 	lifesCounter = 3;
 	oxygen = 0;
-	rescuedDivers = 3;
+	player.divers = 3;
 	gameDificulty = 0;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
+	
+	player.resetPosition();
+	for(obj of enemies)
+		obj.reset();
+	
+}
+
+
+function init(){
+	
+	width = cv.width
+	height = cv.height
+	
+	
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
 	player = new Player();
 	torpedo = new Torpedo(player,0,0,1);
 		
+	window.addEventListener('keydown',playerMove,false);
+	window.addEventListener('keyup',playerMove,false);	
+	startGame();
 	//frameLoop();
 	
 }
