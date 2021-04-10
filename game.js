@@ -195,6 +195,8 @@ class Player extends GameObject{
 		//this.refitingOxygen = true;
 		//this.deliveringDivers = false;
 		this.subStillSurfaced = true;
+		this.explosionFrameCounter = 0;
+		this.explosionInAction = false;
 	}
 	// Player must not pass these limits, ask Activion about this.
 	checkLimits(){
@@ -219,8 +221,12 @@ class Player extends GameObject{
 	}
 	checkInternals(){
 		// Y measures depth
-		if(this.oxygen == 0 && this.y > startPlayerPosition.y)
-			this.destroyPlayer();
+		if(this.explosionInAction)
+			this.subExplosionAnimation();
+		else{
+			if(this.oxygen == 0 && this.y > startPlayerPosition.y)
+				this.destroyPlayer();
+			}
 	}
 	colisionAction(object){
 		object.reset();
@@ -228,16 +234,43 @@ class Player extends GameObject{
 	}
 	// Decrease a lifecouter, resets player and enemies
 	destroyPlayer(){
+		
 		// here we must animate player destruction
 		// Memo , sharks must not stop oscilation during this animation
+		this.explosionInAction = true;
+		this.explosionFrameCounter = 0;
 		
 		
+		
+	}
+	resetAfterDestruction(){
 		this.subStillSurfaced = true;
 		lifesCounter--;
 		this.resetPosition();
 		for(i in enemies)
 			enemies[i].reset(enemyLanes[i]);
-		
+	}
+	subExplosionAnimation(){
+		//console.log("subExplosionAnimation")
+		this.explosionPhase = this.explosionFrameCounter>>2;
+		this.explosionSchemme = {
+				'frames':[4,	4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4,		4],
+				'sprite':[null,	null,	null,	null,	null,	null,	null,	null,	null,	0,		0,		1,		1,		2,		2,		2,		2,		2],
+				'color': [0xe0,	0x00,	0xe0,	0x00,	0xe0,	0x00,	0xe0,	0x00,	0xe0,	0x9c,	0x9c,	0x9c,	0x9c,	0x9c,	0x98,	0x96,	0x94,	0x92]
+		};
+		//console.log(this.explosionPhase +" "+ this.explosionSchemme.sprite.length);
+		if(this.explosionPhase <= this.explosionSchemme.sprite.length){
+			this.color = this.explosionSchemme.color[this.explosionPhase];
+			if(this.explosionSchemme.sprite[this.explosionPhase] != null)
+				this.sprite = subExplosionSprite[this.explosionSchemme.sprite[this.explosionPhase]];
+		}else{
+			//end exlosion animation
+			this.resetAfterDestruction()
+			this.explosionInAction = false;
+			this.sprite = subSprite;
+			this.color = 0x17;
+		}
+		this.explosionFrameCounter++;
 	}
 	resetPosition(){
 		this.x = 76;
