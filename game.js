@@ -578,7 +578,7 @@ function playerMove(e){
 
 
 
-function startGame(){
+function resetGame(){
 	
 	// Token used to draw sea waves.
 	seaToken = 0x08;
@@ -586,7 +586,7 @@ function startGame(){
 	seaTokenCounter = 0;
 	score = 0;
 	lifesCounter = 3;
-	oxygen = 0;
+	player.oxygen = 0;
 	player.divers = 3;
 	gameDificulty = 0;
 	
@@ -614,7 +614,7 @@ function init(){
 		
 	window.addEventListener('keydown',playerMove,false);
 	window.addEventListener('keyup',playerMove,false);	
-	startGame();
+	resetGame();
 	//frameLoop();
 	
 }

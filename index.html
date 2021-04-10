@@ -22,6 +22,30 @@
 			font-size: 150%;
 		
 		}
+		button {
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			margin: 4px 2px;
+			cursor: pointer;
+			background-color: #008CBA;
+		}
+		button:hover {
+			background-color: #006CaA;
+		}
+		button:active {
+			transform: translateY(1px);
+			
+		}
+		button1:active {
+			background-color: #3e8e41;
+			box-shadow: 0 5px #666;
+			transform: translateY(4px);
+		}
 	</style>
 	
 </head>
@@ -32,6 +56,9 @@
 	<div id="gameContainer">
 		<canvas id="gameCanvas" width="960" height="576"></canvas>
 	<div>
+	<div>
+		<button class="resetButton" onclick="resetGame()">RESET</button>
+	</div>
 	<div id="advise">
 		This is a work in progress! <br>If you want to contribute , report a issue or study the code, <br>plz visit <a href=https://github.com/kortkamp/SeaQuestJs>SeaQuestJs' Github</a> <br>and dont forget to make my day better giving me a bright cute shinning star.
 	</div>
