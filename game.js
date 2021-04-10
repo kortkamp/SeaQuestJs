@@ -235,8 +235,8 @@ class Player extends GameObject{
 		this.subStillSurfaced = true;
 		lifesCounter--;
 		this.resetPosition();
-		for(obj of enemies)
-			obj.reset();
+		for(i in enemies)
+			enemies[i].reset(enemyLanes[i]);
 		
 	}
 	resetPosition(){
@@ -278,27 +278,45 @@ class Player extends GameObject{
 }
 
 class Enemy extends GameObject{
-	constructor(y){
-		super(null,null,y,null,null);
+	constructor(posY){
+		super(null,null,posY,null,null);
 		
 		// 0 = shark and 1 = sub
+		this.startYPosition = posY;
 		this.enemyType = enemyId.shark;
 		//this.dir = dir;
 		//this.vx = this.dir * 3/8;
 		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
 		//this.x = this.startPoint[1-dir];
 		//this.animationSpeed = 3;
+		//this.sharkOscilationCounter = 0;
 		this.reset();
 	}
 	update(){
-		this.y += this.vy;
+		// if enemy is shark the y must oscilate from +0 to +8 and +0
+		this.y = this.startYPosition - this.sharkOscilation();
 		this.x += this.vx;
 		
 		this.checkLimits();	
 		
 		this.color = enemyColors[this.enemyType][gameDificulty%8];
-		drawSprite(this.sprite[(this.animationCounter>>this.animationSpeed)%3],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
+		drawSprite(
+					this.sprite[(this.animationCounter>>this.animationSpeed)%3],
+					Math.floor(this.x),
+					Math.floor(this.y),
+					this.dir,
+					this.color,
+					this.hScale);
 		this.animationCounter++;
+	}
+	sharkOscilation(){
+		if(this.enemyType == enemyId.shark){
+			var oscilation = (frameCounter>>2)&0x0f;
+			if(oscilation > 8) 
+				return(16-oscilation);
+			return(oscilation);
+			}
+		return(0);
 	}
 	
 	checkLimits(){
@@ -315,17 +333,18 @@ class Enemy extends GameObject{
 		if((this.x < -33) && (this.dir == -1)){
 			// Alternate between shark and sub
 			this.enemyType = this.enemyType ^ 1;
-			this.reset();
+			this.reset(this.y);
 		};
 	}
 	kill(){
-		// When you kill a enemy , he resets to a shark.
+		// When you kill a enemy , it resets to a shark.
 		this.enemyType = enemyId.shark;	
-		this.reset();	
+		this.reset(this.y);	
 		score += 20;
 		
 	}
-	reset(){
+	reset(posY){
+		this.y = posY;
 		//Direction is randomized every enemy reset.
 		this.dir = binaryRandom();
 		//Vx must follow  "dir" direction.
@@ -525,6 +544,7 @@ function gameLogic(){
 	if((player.oxygen == maxOxygenBar) && (inGame == false)){
 		for(i = 0;i< 4;i++){
 			enemies[i] = new Enemy(enemyLanes[i]);
+			enemies[i].reset(enemyLanes[i]);
 		}
 		
 		inGame = true;
@@ -594,9 +614,9 @@ function resetGame(){
 	frameCounter = 0;
 	
 	player.resetPosition();
-	for(obj of enemies)
-		obj.reset();
-	
+	for(i in enemies){
+		enemies[i].reset(enemyLanes[i]);
+	}
 }
 
 
