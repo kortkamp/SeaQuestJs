@@ -7,6 +7,8 @@ TODO
 
 - issue - digito zero não imprime no score.
 
+- issue - tratar melhor as setas e impedir a rolagem da página quando ela está scrollable.
+
 */
 
 
@@ -168,11 +170,13 @@ class Torpedo extends GameObject{
 		if(!this.active){
 			this.dir = this.parentLaucher.dir;
 			this.vx = this.dir*this.speed;
+			
 			this.y = this.parentLaucher.y + 7;
 			this.x = this.parentLaucher.x + 6*this.parentLaucher.hScale + 1;
 			this.active = true;
 		}
 	}
+	
 }
 
 class Player extends GameObject{
@@ -212,6 +216,10 @@ class Player extends GameObject{
 		this.y = 39;
 		for(obj of enemies)
 			obj.reset();
+		
+	}
+	deliverDivers(){
+		
 		
 	}
 }
