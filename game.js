@@ -294,7 +294,7 @@ class Enemy extends GameObject{
 	}
 	update(){
 		// if enemy is shark the y must oscilate from +0 to +8 and +0
-		this.y = this.startYPosition - this.sharkOscilation();
+		this.y = this.startYPosition + this.sharkOscilation();
 		this.x += this.vx;
 		
 		this.checkLimits();	
@@ -313,8 +313,8 @@ class Enemy extends GameObject{
 		if(this.enemyType == enemyId.shark){
 			var oscilation = (frameCounter>>2)&0x0f;
 			if(oscilation > 8) 
-				return(16-oscilation);
-			return(oscilation);
+				return(12-oscilation);
+			return(oscilation-4);
 			}
 		return(0);
 	}
