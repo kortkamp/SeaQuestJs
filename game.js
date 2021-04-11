@@ -9,6 +9,8 @@ TODO
 
 - issue - tratar melhor as setas e impedir a rolagem da página quando ela está scrollable.
 
+- issue - foco fica no botão reset e reinicia quando aperta start
+
 */
 
 
@@ -48,10 +50,11 @@ var lifesCounter;
 
 //Dificulty , aka speed of the game.
 var gameDificulty;
-var rescuedDivers;
+
 // Max oxygen used do draw oxygen bar.
 var maxOxygenBar = 64;
-var enemies = []
+var enemyList = [];
+var diverList = [];
 // Y position for each of 4 lines of enemies.
 var enemyLanes = [61,85,109,133];
 // Ready for game, oxygen full.
@@ -184,6 +187,89 @@ class Torpedo extends GameObject{
 	
 }
 
+class Diver extends GameObject{
+	constructor(lanePosition){
+		super(diverSprite,null,enemyLanes[lanePosition]-3,0x86,2);
+		this.parentShark = null;
+		this.hScale = 1;
+		
+		this.vx = this.dir*this.speed;
+		this.active = false;
+		this.animationSpeed = 3;
+		this.recentRescued = true;
+		
+	}
+	update(){
+		if(this.active){
+			this.x += this.vx;
+			
+			this.checkLimits();	
+			this.checkInternals();
+			
+			var spriteNumber = (this.animationCounter>>this.animationSpeed)%3;
+			drawSprite(this.sprite[spriteNumber],Math.floor(this.x),Math.floor(this.y),this.parentShark.dir,this.color,this.hScale);
+			this.animationCounter++;
+		}
+	}
+	checkLimits(){
+		
+		if(this.x > (atariScreen.width + 5)){
+			console.log("diver in right limit");
+			this.active = false;
+			this.x = atariScreen.width;
+		}
+		if(this.x   < -spriteWidth-10 ){
+			console.log("diver in left limit");
+			this.active = false;
+			this.x = 0-spriteWidth;
+		}
+		
+	}
+	colisionAction(object){
+		if(this.active){
+			
+			if(object === player){
+				
+				// Diver rescued
+				if(player.rescuedDivers < 6){
+					player.rescuedDivers++;
+					this.reset();
+					this.active = false;
+					this.recentRescued = true;
+				}
+			}else{
+				// Terrible shark, RUN!!
+				this.animationSpeed = 2;
+				this.vx = this.parentShark.vx;
+			}
+		}
+	}
+	reset(){
+		if(this.recentRescued){
+			// have a probability to create a new diver.
+			if(Math.random() > 0.5){
+				this.recentRescued = false;
+			}
+		}
+		if(!this.recentRescued){
+			
+			this.dir = this.parentShark.dir;
+			// Initial diver speed is 1/2 shark speed
+			this.vx = this.parentShark.vx/2; 
+			
+			//this.x = this.parentShark.startPoint[1-this.dir]+this.dir*47;
+			if(this.dir == 1)
+				this.x = 0-spriteWidth;
+			else
+				this.x = atariScreen.width;
+			//this.x = 80;
+			this.animationSpeed = 3;
+			this.active = true;
+		}
+	}
+	
+}
+
 class Player extends GameObject{
 	constructor(){
 		
@@ -191,7 +277,7 @@ class Player extends GameObject{
 		this.baseSpeed = 1;
 		this.hScale = 2;
 		this.oxygen = 0;
-		this.divers;
+		this.rescuedDivers = 0;
 		//this.refitingOxygen = true;
 		//this.deliveringDivers = false;
 		this.subStillSurfaced = true;
@@ -247,8 +333,12 @@ class Player extends GameObject{
 		this.subStillSurfaced = true;
 		lifesCounter--;
 		this.resetPosition();
-		for(i in enemies)
-			enemies[i].reset(enemyLanes[i]);
+		for(i in enemyList){
+			
+			diverList[i].reset();
+			diverList[i].active = false;
+			enemyList[i].reset(enemyLanes[i]);
+		}
 	}
 	subExplosionAnimation(){
 		//console.log("subExplosionAnimation")
@@ -287,18 +377,13 @@ class Player extends GameObject{
 			
 		}
 	}
-	/*
-	rescueDiver(){
-		this.divers ++;
-		
-	}
-	*/
+	
 	deliverDivers(){
 		// If previously the sub was not surfaced.
 		// Need this to prevent a loop o delivering divers.
 		if(!this.subStillSurfaced){
-			if(this.divers>0){
-				this.divers--;
+			if(this.rescuedDivers>0){
+				this.rescuedDivers--;
 				gameDificulty++;
 			}
 			else{
@@ -311,19 +396,22 @@ class Player extends GameObject{
 }
 
 class Enemy extends GameObject{
-	constructor(posY){
-		super(null,null,posY,null,null);
+	constructor(lanePosition){
+		super(null,null,enemyLanes[lanePosition],null,null);
 		
+		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
 		// 0 = shark and 1 = sub
-		this.startYPosition = posY;
+		this.lanePosition = lanePosition;
+		this.startYPosition = enemyLanes[lanePosition];
 		this.enemyType = enemyId.shark;
+		this.childDiver = null;
 		//this.dir = dir;
 		//this.vx = this.dir * 3/8;
-		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
+		
 		//this.x = this.startPoint[1-dir];
 		//this.animationSpeed = 3;
 		//this.sharkOscilationCounter = 0;
-		this.reset();
+		//this.reset();
 	}
 	update(){
 		// if enemy is shark the y must oscilate from +0 to +8 and +0
@@ -355,12 +443,9 @@ class Enemy extends GameObject{
 	checkLimits(){
 		if((this.x > atariScreen.colorClocks+33) && (this.dir == 1)){
 			// Alternate between shark and sub
-			this.enemyType = this.enemyType ^ 1;
+			this.enemyType = this.enemyType ^ 1;	
+			this.reset(this.y);
 			
-			this.dir = binaryRandom();
-			this.vx = this.dir * enemySpeeds[gameDificulty&0b00001111];
-			this.x = this.startPoint[1-this.dir];
-			this.sprite = enemySprites[this.enemyType];
 			
 		};
 		if((this.x < -33) && (this.dir == -1)){
@@ -373,10 +458,13 @@ class Enemy extends GameObject{
 		// When you kill a enemy , it resets to a shark.
 		this.enemyType = enemyId.shark;	
 		this.reset(this.y);	
+		this.childDiver.vx = this.vx/2;
+		this.childDiver.animationSpeed = 3;
 		score += 20;
 		
 	}
 	reset(posY){
+		
 		this.y = posY;
 		//Direction is randomized every enemy reset.
 		this.dir = binaryRandom();
@@ -388,11 +476,21 @@ class Enemy extends GameObject{
 		this.animationSpeed = 3-this.enemyType;
 		// Update the enemy sprite. 0 for shark and 1 for sub.
 		this.sprite = enemySprites[this.enemyType];
+		
+		
+		
+		// If enemy is a shark and is on the same side of hidden diver, ativate it.
+		if((this.enemyType == enemyId.shark) &&(!this.childDiver.active)&& (Math.abs(this.x - this.childDiver.x) < 100)){
+			
+			//this.childDiver.active = true;
+			this.childDiver.reset();
+		}
 	}
 }
 
 // returns randomically -1 or 1
 function binaryRandom(){
+	
 	if(Math.random() > 0.5)
 		return(1);
 	return(-1);
@@ -540,7 +638,7 @@ function drawBG(){
 	ctx.fillRect(49*canvasScale,163*canvasScale, player.oxygen * canvasScale,5*canvasScale);
 	
 	// Draw rescued divers
-	for(i = 0; i< player.divers; i++ ){
+	for(i = 0; i< player.rescuedDivers; i++ ){
 		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
 	}
 	
@@ -558,17 +656,27 @@ function frameDraw(){
 function gameLogic(){
 	if(lifesCounter > 0){
 		player.update();
-		for(obj of enemies)
-			player.checkCollision(obj);
+		for(i in enemyList){
+			player.checkCollision(enemyList[i]);
+		
+		}
 	}
 	if(torpedo.active){
 		torpedo.update();
 		//check Colisions
-		for(obj of enemies)
+		for(obj of enemyList)
 			torpedo.checkCollision(obj);
 	}
-	for(obj of enemies){
+	for(i in diverList){
+		// diver needs to check colision with just correspondente lane shark.
+		diverList[i].checkCollision(enemyList[i]);
+		diverList[i].checkCollision(player);
+	}
+	for(obj of enemyList){
 		obj.update();
+	}
+	for(diver of diverList){
+			diver.update();
 	}
 	//if(player.y == 39 && player.oxygen < maxOxygenBar && (frameCounter&1) == 1 )
 	//	player.oxygen++;
@@ -577,8 +685,17 @@ function gameLogic(){
 	// Wait for the oxygen bar become full.
 	if((player.oxygen == maxOxygenBar) && (inGame == false)){
 		for(i = 0;i< 4;i++){
-			enemies[i] = new Enemy(enemyLanes[i]);
-			enemies[i].reset(enemyLanes[i]);
+			enemyList[i] = new Enemy(i);
+			
+			
+			diverList[i] = new Diver(i);
+			
+			// Link same lane Divers and Sharks.
+			enemyList[i].childDiver = diverList[i];
+			diverList[i].parentShark = enemyList[i];
+			
+			enemyList[i].reset(enemyLanes[i]);
+			diverList[i].reset();
 		}
 		
 		inGame = true;
@@ -641,15 +758,15 @@ function resetGame(){
 	score = 0;
 	lifesCounter = 3;
 	player.oxygen = 0;
-	player.divers = 3;
+	player.rescuedDivers = 0;
 	gameDificulty = 0;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
 	
 	player.resetPosition();
-	for(i in enemies){
-		enemies[i].reset(enemyLanes[i]);
+	for(i in enemyList){
+		enemyList[i].reset(enemyLanes[i]);
 	}
 }
 
