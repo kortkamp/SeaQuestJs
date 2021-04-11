@@ -38,7 +38,7 @@ const startPlayerPosition = {
 
 
 
-var canvasScale = 3;
+var canvasScale = 1;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
 
@@ -440,7 +440,7 @@ loop:
 
 function drawSprite(sprite,x,y,dir,color,hScale){
 	// Actually X Canvas position based in Atari x position.
-	xCanvas = x*2*canvasScale;
+	xCanvas = x*canvasScale;
 	// Actually Y Canvas position based in Atari Y position.
 	yCanvas = y*canvasScale;
     for(line = 0 ; line < sprite.length; line++){
@@ -451,12 +451,12 @@ function drawSprite(sprite,x,y,dir,color,hScale){
 			for(var i = 0; i<8;i++){
 				if(dir == 1){
 					if(((sprite[line]<<i)&0x80)==0x80){
-						ctx.fillRect(x*2*canvasScale+2*i*hScale*canvasScale,y*canvasScale+line*canvasScale,2*hScale*canvasScale,canvasScale);
+						ctx.fillRect(x*canvasScale+i*hScale*canvasScale,y*canvasScale+line*canvasScale,hScale*canvasScale,canvasScale);
 					}	
 				}
 				if(dir == -1){
 					if(((sprite[line]>>i)&0x01)==0x01){
-						ctx.fillRect(x*2*canvasScale+2*i*hScale*canvasScale,y*canvasScale+line*canvasScale,2*hScale*canvasScale,canvasScale);
+						ctx.fillRect(x*canvasScale+i*hScale*canvasScale,y*canvasScale+line*canvasScale,hScale*canvasScale,canvasScale);
 					}	
 				}
 			}
@@ -532,11 +532,12 @@ function drawBG(){
 	// TODO , blinking bar when oxygen reachas 10 or <
 	for(i = 0; i < 3; i++)
 		drawSprite(oxygenSprite[i], 15 + i*8 ,163,1,0x00,1);
+		
 	// Draw Oxygen Bar
 	ctx.fillStyle = tiaColor(0x32);
-	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* maxOxygenBar * canvasScale,5*canvasScale);
+	ctx.fillRect(49*canvasScale,163*canvasScale, maxOxygenBar * canvasScale,5*canvasScale);
 	ctx.fillStyle = tiaColor(0x0C);
-	ctx.fillRect(2*49*canvasScale,163*canvasScale,2* player.oxygen * canvasScale,5*canvasScale);
+	ctx.fillRect(49*canvasScale,163*canvasScale, player.oxygen * canvasScale,5*canvasScale);
 	
 	// Draw rescued divers
 	for(i = 0; i< player.divers; i++ ){
@@ -594,7 +595,7 @@ function frameLoop(){
 	
 	// Draw left black offset to simulate Horizontal Blank
 	ctx.fillStyle = tiaColor(0x00);
-	ctx.fillRect(0,0,8*2*canvasScale,height);
+	ctx.fillRect(0,0,8*canvasScale,height);
 }
 
 function playerMove(e){
