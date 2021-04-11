@@ -278,7 +278,7 @@ class Player extends GameObject{
 		this.hScale = 2;
 		this.oxygen = 0;
 		this.rescuedDivers = 0;
-		//this.refitingOxygen = true;
+		//this.engineStoped = true;
 		//this.deliveringDivers = false;
 		this.subStillSurfaced = true;
 		this.explosionFrameCounter = 0;
@@ -323,6 +323,9 @@ class Player extends GameObject{
 		
 		// here we must animate player destruction
 		// Memo , sharks must not stop oscilation during this animation
+		this.engineStoped = true;
+		this.vx = 0;
+		this.vy = 0;
 		this.explosionInAction = true;
 		this.explosionFrameCounter = 0;
 		
@@ -333,6 +336,7 @@ class Player extends GameObject{
 		this.subStillSurfaced = true;
 		lifesCounter--;
 		this.resetPosition();
+		this.engineStoped = false;
 		for(i in enemyList){
 			
 			diverList[i].reset();
@@ -369,10 +373,10 @@ class Player extends GameObject{
 		
 	}
 	refitOxygen(){
-		this.refitingOxygen = false;
+		this.engineStoped = false;
 		if(this.oxygen < maxOxygenBar){
 			player.oxygen += 0.5;
-			this.refitingOxygen = true;
+			this.engineStoped = true;
 		}else{
 			
 		}
@@ -720,7 +724,7 @@ function playerMove(e){
 	var code = e.keyCode;
 	//console.log(code);
 	if(e.type == "keydown")
-		if(!player.refitingOxygen){
+		if(!player.engineStoped){
 			switch (code) {
 				case 32:
 					torpedo.fire(player);
