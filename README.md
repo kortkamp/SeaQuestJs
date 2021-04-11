@@ -51,4 +51,6 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe para o game match.
 * 10/04/2021 
 	* Foram feitas melhorias no desempenho da função tiaColor de acordo com dicas recebidas por um amigo do grupo Atari Brasil, onde não é mais necessário fazer qualquer operação para gerar a cor RGB, a solução inicial era receber um number hexadecimal, converter para string com dapStart(6,'0') e adicionar um hashtag # , ou seja converter no formato color string. Percebi que era mais fácil simplemente armazenar direto as strings e a função passou a ser um mero redirecionador de elementos do array de cores RGB do Atari.
-	* 
+* 11/04/2021
+	* Implementar os mergulhadores foi realmente desafiador. À medida que o projeto cresce e as classes interagem torna-se mais e mais complexo fazer novas implementações sem gerar conflitos. Faz-se necessário estudar mais um pouco de Design Patterns a fim de que os futuros projetos sejam melhor organizados e não gerem essa dificuldade nos estágios finais.
+	
