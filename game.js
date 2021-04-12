@@ -38,7 +38,7 @@ const startPlayerPosition = {
 
 
 
-var canvasScale = 1;
+//var canvasScale = 1;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
 
@@ -538,9 +538,9 @@ loop:
 
 function drawSprite(sprite,x,y,dir,color,hScale){
 	// Actually X Canvas position based in Atari x position.
-	xCanvas = x*canvasScale;
+	//xCanvas = x*canvasScale;
 	// Actually Y Canvas position based in Atari Y position.
-	yCanvas = y*canvasScale;
+	//yCanvas = y*canvasScale;
     for(line = 0 ; line < sprite.length; line++){
 		// Set the color to entire line as in Atari 2600 hardware.
 		ctx.fillStyle = tiaColor(color);
@@ -549,12 +549,12 @@ function drawSprite(sprite,x,y,dir,color,hScale){
 			for(var i = 0; i<8;i++){
 				if(dir == 1){
 					if(((sprite[line]<<i)&0x80)==0x80){
-						ctx.fillRect(x*canvasScale+i*hScale*canvasScale,y*canvasScale+line*canvasScale,hScale*canvasScale,canvasScale);
+						ctx.fillRect(x+i*hScale,y+line,hScale,1);
 					}	
 				}
 				if(dir == -1){
 					if(((sprite[line]>>i)&0x01)==0x01){
-						ctx.fillRect(x*canvasScale+i*hScale*canvasScale,y*canvasScale+line*canvasScale,hScale*canvasScale,canvasScale);
+						ctx.fillRect(x+i*hScale,y+line,hScale,1);
 					}	
 				}
 			}
@@ -597,7 +597,7 @@ function drawBG(){
 			}else{
 				ctx.fillStyle = tiaColor(colorBK[1]);
 			}
-			ctx.fillRect(0,scanline*canvasScale,width,canvasScale);
+			ctx.fillRect(0,scanline,width,1);
 			scanline++;
 		}		
 	}
@@ -624,7 +624,7 @@ function drawBG(){
 	var montain = [ 3,2,1,0,0,1,2,3];
 	for(i = 0 ;i < 40; i++){
 		ctx.fillStyle = tiaColor(0xc0);
-		ctx.fillRect(i*8*canvasScale,154*canvasScale,8*canvasScale,canvasScale*montain[i%8]);
+		ctx.fillRect(i*8,154,8,montain[i%8]);
 	}
 	
 	// Draw Oxygen bar
@@ -636,11 +636,11 @@ function drawBG(){
 	ctx.fillStyle = tiaColor(0x32);
 	
 		
-	ctx.fillRect(49*canvasScale,163*canvasScale, maxOxygenBar * canvasScale,5*canvasScale);
+	ctx.fillRect(49,163, maxOxygenBar ,5);
 	ctx.fillStyle = tiaColor(0x0C);
 	if((player.oxygen <= 16) && ((frameCounter&16) == 16)&&!player.engineStoped)
 		ctx.fillStyle = tiaColor(0x00);
-	ctx.fillRect(49*canvasScale,163*canvasScale, player.oxygen * canvasScale,5*canvasScale);
+	ctx.fillRect(49,163, player.oxygen ,5);
 	
 	// Draw rescued divers
 	for(i = 0; i< player.rescuedDivers; i++ ){
@@ -718,7 +718,7 @@ function frameLoop(){
 	
 	// Draw left black offset to simulate Horizontal Blank
 	ctx.fillStyle = tiaColor(0x00);
-	ctx.fillRect(0,0,8*canvasScale,height);
+	ctx.fillRect(0,0,8,height);
 }
 
 function playerMove(e){
