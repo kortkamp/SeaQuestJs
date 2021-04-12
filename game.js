@@ -7,10 +7,7 @@ TODO
 
 - issue - digito zero não imprime no score.
 
-
-
 */
-
 
 var colorClosks =160;
 const atariScreen = {
@@ -36,15 +33,12 @@ const startPlayerPosition = {
 	
 };
 
-
-
 //var canvasScale = 1;
 var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
 
 var score;
 var lifesCounter;
-
 
 //Dificulty , aka speed of the game.
 var gameDificulty;
@@ -65,9 +59,7 @@ var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36],
 // Like enemyColors , enemySpeeds chages as dificulty increases.
 var enemySpeeds = [3/8	,	3/7,	8/14,	5/8,	11/16,	3/4,	13/16, 1,1,1,1,1,1,1,1,1,1];
 
-
 var inGame = false;
-
 
 // Generic objct to extends: player , enemy, diver , torpedo.
 class GameObject {
@@ -141,7 +133,7 @@ class Torpedo extends GameObject{
 		super(singleTorpedoSprite,x,y,0x18,2);
 		
 		this.parentLaucher = parentLaucher;
-		this.speed = 5;
+		this.speed = 3;
 		this.hScale = 1;
 		this.dir = dir;
 		this.vx = this.dir*this.speed;
@@ -160,10 +152,16 @@ class Torpedo extends GameObject{
 		
 		if(this.x >= atariScreen.width || (this.x + spriteWidth <= 0 )){
 			this.halt();
+			fireTorpedoSound.pause();
+			fireTorpedoSound.currentTime = 0;
 		}
 		
 	}
 	colisionAction(object){
+		if(object.enemyType == enemyId.shark)
+			destroySharkSound.play();
+		else
+			destroyEnemySubSound.play();
 		object.kill();
 		this.halt();
 	}
@@ -174,6 +172,7 @@ class Torpedo extends GameObject{
 	fire(){
 		
 		if(!this.active){
+			fireTorpedoSound.play();
 			this.dir = this.parentLaucher.dir;
 			this.vx = this.dir*this.speed;
 			
@@ -228,6 +227,7 @@ class Diver extends GameObject{
 				
 				// Diver rescued
 				if(player.rescuedDivers < 6){
+					rescueDiverSound.play();
 					player.rescuedDivers++;
 					this.reset();
 					this.active = false;
@@ -317,6 +317,7 @@ class Player extends GameObject{
 	// Decrease a lifecouter, resets player and enemies
 	destroyPlayer(){
 		
+		destroyPlayerSound.play();
 		// here we must animate player destruction
 		// Memo , sharks must not stop oscilation during this animation
 		this.engineStoped = true;
@@ -624,7 +625,7 @@ function drawBG(){
 	var montain = [ 3,2,1,0,0,1,2,3];
 	for(i = 0 ;i < 40; i++){
 		ctx.fillStyle = tiaColor(0xc0);
-		ctx.fillRect(i*8,154,8,montain[i%8]);
+		ctx.fillRect(i*4,154,4,montain[i%8]);
 	}
 	
 	// Draw Oxygen bar
@@ -643,8 +644,11 @@ function drawBG(){
 	ctx.fillRect(49,163, player.oxygen ,5);
 	
 	// Draw rescued divers
+	diverIcoColor = 0x84;
+	if(player.rescuedDivers == 6 && (frameCounter&8)==8)
+		diverIcoColor = 0x06;
 	for(i = 0; i< player.rescuedDivers; i++ ){
-		drawSprite(diverIco,58 + i * 8,170,1,0x84,1);
+		drawSprite(diverIco,58 + i * 8,170,1,diverIcoColor,1);
 	}
 	
 	// Update the frame counter.
@@ -773,16 +777,27 @@ function resetGame(){
 	player.resetPosition();
 	for(i in enemyList){
 		enemyList[i].reset(enemyLanes[i]);
+		diverList[i].reset();
+		diverList[i].active = false;
 	}
 }
 
+function loadSounds(){
+	destroySharkSound = new Audio('./sounds/destroyShark.mp3');
+	destroyEnemySubSound = new Audio('./sounds/destroyEnemySub.mp3');
+	fireTorpedoSound = new Audio('./sounds/fireTorpedo.mp3');
+	destroyPlayerSound = new Audio('./sounds/destroyPlayer.mp3');
+	rescueDiverSound = new Audio('./sounds/rescueDiver.mp3');
+	//audio.play();
+
+}
 
 function init(){
 	
 	width = cv.width
 	height = cv.height
-	
-	
+
+	loadSounds();
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
 	updateTimerTimerId = setInterval(frameLoop, 16);
