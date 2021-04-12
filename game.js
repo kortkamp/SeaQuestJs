@@ -7,9 +7,7 @@ TODO
 
 - issue - digito zero não imprime no score.
 
-- issue - tratar melhor as setas e impedir a rolagem da página quando ela está scrollable.
 
-- issue - foco fica no botão reset e reinicia quando aperta start
 
 */
 
@@ -214,12 +212,10 @@ class Diver extends GameObject{
 	checkLimits(){
 		
 		if(this.x > (atariScreen.width + 5)){
-			console.log("diver in right limit");
 			this.active = false;
 			this.x = atariScreen.width;
 		}
 		if(this.x   < -spriteWidth-10 ){
-			console.log("diver in left limit");
 			this.active = false;
 			this.x = 0-spriteWidth;
 		}
@@ -610,12 +606,13 @@ function drawBG(){
 	
 	
 	// Draw Score
+	skyColor = 0x84
+	scoreColor = skyColor;
 	for(i = 5; i >= 0; i--){
 		digit = Math.floor(score/Math.pow(10,i))%10;
-		if(digit > 0 || i == 0 ){
-			drawSprite(numberSprite[digit],66+32-i*8,2,1,0x1A,1);
-		}
-		
+		if(digit > 0 || i == 0) 
+			scoreColor = 0x1A;
+		drawSprite(numberSprite[digit],66+32-i*8,2,1,scoreColor,1);
 	}
 	
 	// Draw life ico.
@@ -637,8 +634,12 @@ function drawBG(){
 		
 	// Draw Oxygen Bar
 	ctx.fillStyle = tiaColor(0x32);
+	
+		
 	ctx.fillRect(49*canvasScale,163*canvasScale, maxOxygenBar * canvasScale,5*canvasScale);
 	ctx.fillStyle = tiaColor(0x0C);
+	if((player.oxygen <= 16) && ((frameCounter&16) == 16)&&!player.engineStoped)
+		ctx.fillStyle = tiaColor(0x00);
 	ctx.fillRect(49*canvasScale,163*canvasScale, player.oxygen * canvasScale,5*canvasScale);
 	
 	// Draw rescued divers
@@ -654,6 +655,7 @@ function drawBG(){
 }
 
 function frameDraw(){
+	
 	drawBG();	
 }
 
