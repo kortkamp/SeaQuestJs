@@ -1,5 +1,7 @@
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"> 
+
 	<style>
 		body {
 		
@@ -20,9 +22,10 @@
 		#advise {
 			font-weight: 200;
 			font-size: 150%;
+			text-align: center; 
 		
 		}
-		button {
+		#resetButton {
 			border: none;
 			color: white;
 			padding: 15px 32px;
@@ -34,10 +37,10 @@
 			cursor: pointer;
 			background-color: #008CBA;
 		}
-		button:hover {
+		#resetButton:hover {
 			background-color: #006CaA;
 		}
-		button:active {
+		#resetButton:active {
 			transform: translateY(1px);
 			
 		}
@@ -46,6 +49,93 @@
 			box-shadow: 0 5px #666;
 			transform: translateY(4px);
 		}
+		
+            #controller {
+                width: 98vw;
+                height: 70vw;
+                background-color: rgb(31, 28, 28);
+                border-radius: 10%;
+                display: none;
+                position: relative;
+            }
+            #fireButton {
+                position: absolute;
+                right: 5%;
+                top: 5%;
+                background-color: red;
+                width: 20%;
+                height: 24%;
+                border-radius: 50%;
+            }
+            #stickBorder {
+                position: relative;
+                top: 12%;
+                left: 5%;
+                border: 1px dashed;
+                
+                border-width: 25px;
+                border-color: rgb(45, 45, 46);
+                width: 61%;
+                height: 72%;
+                border-radius: 50%;
+                background-color: inherit;
+                
+
+               
+            }
+            #stick {
+                position: absolute;
+                background-color: rgb(10, 10, 10);
+                top: 40%;
+                left: 40%;
+                width: 20%;
+                height: 20%;
+                border-radius: 50%;
+            }
+            .arrow {
+                width: 0;
+	            height: 0;
+                position:absolute;
+            }
+            #arrowUp {
+                
+                top: 0px;
+                left: 45%;
+                border-left: 25px solid transparent;
+                border-right: 25px solid transparent;
+                border-bottom: 50px solid #555;
+            }
+            #arrowLeft {
+                top: 45%;
+                left: 0px;
+                border-top: 25px solid transparent;
+                border-right: 50px solid #555;
+                border-bottom: 25px solid transparent;
+            }
+            #arrowDown {
+                bottom: 0px;
+                left: 45%;
+                border-left: 25px solid transparent;
+                border-right: 25px solid transparent;
+                border-top: 50px solid #555;
+            }
+            #arrowRight {
+                top: 45%;
+                right: 0px;
+                border-top: 25px solid transparent;
+                border-left: 50px solid #555;
+                border-bottom: 25px solid transparent;
+            }
+            .arrowButton {
+                border: none;
+                transform: translate(-50%, -50%);
+                border-radius: 50%;
+                height: 250;
+                width: 300;
+                background-color: transparent;
+                
+            }
+           
 	</style>
 	
 </head>
@@ -55,10 +145,39 @@
 	<div id="title"> SeaQuestJs</div>
 	<div id="gameContainer">
 		<canvas id="gameCanvas" width="160" height="192" style="width:960;height:576"></canvas>
-	<div>
-	<div>
-		<button class="resetButton" onclick="this.blur();resetGame()">RESET</button>
+		<div>
+			<button id="resetButton" onclick="this.blur();resetGame()">RESET</button>
+		</div>
+		
 	</div>
+
+	<div id="controllerContainer" >
+		<div id="controller">
+            <div id="stickBorder" >
+                <div id="stick">
+
+                </div>
+                <div id="arrowUp" class="arrow">
+                   
+                </div>
+                <div id="arrowDown" class="arrow">
+                   
+                </div>
+                <div id="arrowLeft" class="arrow">
+                   
+                </div>
+                <div id="arrowRight" class="arrow">
+                    
+                </div>
+            </div> 
+
+            <button id="fireButton" onclick="this.blur();torpedo.fire();">
+               
+            </button>
+        </div>
+	</div>	
+		
+	
 	<div id="advise">
 		This is a work in progress! <br>If you want to contribute , report a issue or study the code, <br>plz visit <a href=https://github.com/kortkamp/SeaQuestJs>SeaQuestJs' Github</a> <br>and dont forget to make my day better giving me a bright cute shinning star.
 	</div>
