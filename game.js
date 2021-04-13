@@ -275,22 +275,24 @@ class Player extends GameObject{
 		this.hScale = 2;
 		this.oxygen = 0;
 		this.rescuedDivers = 0;
-		//this.engineStoped = true;
+		this.engineStoped = true;
 		//this.deliveringDivers = false;
 		this.subStillSurfaced = true;
 		this.explosionFrameCounter = 0;
 		this.explosionInAction = false;
 	}
 	update(){
-		this.y += this.input.getY();
-		this.vx = this.input.getX();
-		this.x += this.vx;
-		if(this.vx > 0)
-			this.dir = 1;
-		if(this.vx < 0)
-			this.dir = -1;
-		if(this.input.getFire())
-			torpedo.fire();
+		if(!this.engineStoped){
+			this.y += this.input.getY();
+			this.vx = this.input.getX();
+			this.x += this.vx;
+			if(this.vx > 0)
+				this.dir = 1;
+			if(this.vx < 0)
+				this.dir = -1;
+			if(this.input.getFire())
+				torpedo.fire();
+		}	
 		//if(this.input.getFire())
 		//	this.fire();
 		
@@ -313,8 +315,8 @@ class Player extends GameObject{
 			this.y = 134;
 		}
 		if(this.y <= 39){
-			this.refitOxygen();
 			this.deliverDivers();
+			this.refitOxygen();
 			this.y = 39;
 		}
 		if(this.y > 45 && this.oxygen > 0 && (frameCounter&0b00011111) == 0b00011111 ){
@@ -351,6 +353,7 @@ class Player extends GameObject{
 		
 	}
 	resetAfterDestruction(){
+		this.oxygen = 0;
 		this.subStillSurfaced = true;
 		lifesCounter--;
 		this.resetPosition();
@@ -391,8 +394,12 @@ class Player extends GameObject{
 		
 	}
 	refitOxygen(){
+		
+		
 		this.engineStoped = false;
-		if(this.oxygen < maxOxygenBar){
+		if(this.oxygen < maxOxygenBar && !this.explosionInAction){
+			//refitOxygenSound.currentTime = refitOxygenSound.duration*(this.oxygen/maxOxygenBar);
+			refitOxygenSound.play();
 			player.oxygen += 0.5;
 			this.engineStoped = true;
 		}else{
@@ -709,25 +716,12 @@ function gameLogic(){
 	for(diver of diverList){
 			diver.update();
 	}
-	//if(player.y == 39 && player.oxygen < maxOxygenBar && (frameCounter&1) == 1 )
-	//	player.oxygen++;
+
 
 	
 	// Wait for the oxygen bar become full.
 	if((player.oxygen == maxOxygenBar) && (inGame == false)){
-		for(i = 0;i< 4;i++){
-			enemyList[i] = new Enemy(i);
-			
-			
-			diverList[i] = new Diver(i);
-			
-			// Link same lane Divers and Sharks.
-			enemyList[i].childDiver = diverList[i];
-			diverList[i].parentShark = enemyList[i];
-			
-			enemyList[i].reset(enemyLanes[i]);
-			diverList[i].reset();
-		}
+		
 		
 		inGame = true;
 	}
@@ -791,41 +785,40 @@ class Input{
 	}
 	cotrollerListener(e,input){
 		
-
+		
+		input.controllerX = 0;
+		input.controllerY = 0;
 		if(e.type === "touchend"){
-			input.controllerX = 0;
-			input.controllerY = 0;
+			//console.log("end touch");
+			
 			//release controls
 			//console.log(e.type);
 		}else if(e.type === "touchstart" || e.type === "touchmove"){
+			//console.log(e.type);
 			var x = e.touches[0].clientX - input.controllerCenterX;
 			var y = e.touches[0].clientY - input.controllerCenterY;
-			var direction  = Math.PI - Math.atan2(x,y);
+			var touchDirectionDegrees  = 180*(1 - Math.atan2(x,y)/Math.PI);
 			
-			var threshold = 100;
-			if(x > threshold) 
+			//console.log(touchDirectionDegrees);
+			if(touchDirectionDegrees > 30 && touchDirectionDegrees < 150)
 				input.controllerX = 1;
-			if(x < -threshold) 
+			if(touchDirectionDegrees > 210 && touchDirectionDegrees < 330)
 				input.controllerX = -1;
-			if(y > threshold) 
+			if(touchDirectionDegrees > 120 && touchDirectionDegrees < 240)
 				input.controllerY = 1;
-			if(y < -threshold) 
+			if(touchDirectionDegrees > 300 || touchDirectionDegrees < 60)
 				input.controllerY = -1;
-
-			//console.log("coords: " + input.controllerX + "," + input.controllerY);	
-			//if(direction)
-			//console.log((e.touches[0].clientX - input.controllerCenterX));
-			//console.log((e.touches[0].clientY - input.controllerCenterY));
 		}
-
+		document.getElementById("stick").style.top = (40+10*input.controllerY) + "%";
+		document.getElementById("stick").style.left = (40+10*input.controllerX) + "%";
 	}
 	initControllerListener(input){
 		
 		
 		// Add listener functions to mouse events.
-		this.stickArea.addEventListener("mousedown", this.cotrollerListener, false);
-		this.stickArea.addEventListener("mouseup", this.cotrollerListener, false);
-		this.stickArea.addEventListener("mousemove", this.cotrollerListener, false);
+		//this.stickArea.addEventListener("mousedown", this.cotrollerListener, false);
+		//this.stickArea.addEventListener("mouseup", this.cotrollerListener, false);
+		//this.stickArea.addEventListener("mousemove", this.cotrollerListener, false);
 
 		// Add listener functions to touch events.
 		this.stickArea.addEventListener("touchstart", function(e){input.cotrollerListener(e,input)}, false);
@@ -868,6 +861,9 @@ function resetGame(){
 	frameCounter = 0;
 	
 	player.resetPosition();
+
+
+
 	for(i in enemyList){
 		enemyList[i].reset(enemyLanes[i]);
 		diverList[i].reset();
@@ -881,6 +877,7 @@ function loadSounds(){
 	fireTorpedoSound = new Audio('./sounds/fireTorpedo.mp3');
 	destroyPlayerSound = new Audio('./sounds/destroyPlayer.mp3');
 	rescueDiverSound = new Audio('./sounds/rescueDiver.mp3');
+	refitOxygenSound = new Audio('./sounds/refitOxygen.mp3');
 	//audio.play();
 
 }
@@ -914,12 +911,48 @@ function init(){
 	input.initControllerListener(input);
 	player = new Player(input);
 	torpedo = new Torpedo(player,0,0,1);
+
+	seaToken = 0x08;
+	score = 0;
+	frameCounter = 0;
+
+	for(i = 0;i< 4;i++){
+		enemyList[i] = new Enemy(i);
+		diverList[i] = new Diver(i);
+		// Link same lane Divers and Sharks.
+		enemyList[i].childDiver = diverList[i];
+		diverList[i].parentShark = enemyList[i];
+		enemyList[i].reset(enemyLanes[i]);
+		diverList[i].reset();
 		
-	
+	}
+
+	player.resetPosition();
 	window.addEventListener('keydown',function(e){input.keyboardListener(e)},false);
 	window.addEventListener('keyup',function(e){input.keyboardListener(e)},false);	
-	resetGame();
+	
+	//resetGame();
 	//frameLoop();
+
+
+		
+		
+		player.oxygen = 0;
+		player.rescuedDivers = 0;
+		gameDificulty = 0;
+		
+		// Frame counter for use in animations and miscs.
+		frameCounter = 0;
+		
+		player.resetPosition();
+	
+	
+	
+		for(i in enemyList){
+			enemyList[i].reset(enemyLanes[i]);
+			diverList[i].reset();
+			//diverList[i].active = false;
+		}
 	
 }
 
