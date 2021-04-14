@@ -406,8 +406,11 @@ class Player extends GameObject{
 		
 		this.engineStoped = false;
 		if(this.oxygen < maxOxygenBar && !this.explosionInAction){
-			//refitOxygenSound.currentTime = refitOxygenSound.duration*(this.oxygen/maxOxygenBar);
-			refitOxygenSound.play();
+			if(refitOxygenSound.currentTime == 0 || refitOxygenSound.currentTime==refitOxygenSound.duration){
+				refitOxygenSound.currentTime = refitOxygenSound.duration*(this.oxygen/maxOxygenBar);
+				refitOxygenSound.play();
+			
+			}
 			player.oxygen += 0.5;
 			this.engineStoped = true;
 		}else{
