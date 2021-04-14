@@ -6,7 +6,18 @@
 # Instructions
 *	Use arroys keys to move and space to shoot
 
+# todo list
 
+* Gerais
+	* Separar game.js em módulos: gráfico, input, classes??
+	* Aplicar o design observer para input e timed events
+	* Centralizar timed events em uma classe
+	* Testar desempenho e otimizar as rotinas mais comuns
+	* Estudar e aplicar o Design Pattern mais indicado
+* Específicas
+	* Entregar divers e contar pontuação
+	* Enemy sub precisam atirar torpedos
+	* Mini sub na superfície
 
 # Jounal (Sorry, just in portuguese)
 

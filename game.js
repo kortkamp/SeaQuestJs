@@ -800,14 +800,20 @@ class Input{
 			var touchDirectionDegrees  = 180*(1 - Math.atan2(x,y)/Math.PI);
 			
 			//console.log(touchDirectionDegrees);
-			if(touchDirectionDegrees > 30 && touchDirectionDegrees < 150)
-				input.controllerX = 1;
-			if(touchDirectionDegrees > 210 && touchDirectionDegrees < 330)
-				input.controllerX = -1;
-			if(touchDirectionDegrees > 120 && touchDirectionDegrees < 240)
-				input.controllerY = 1;
-			if(touchDirectionDegrees > 300 || touchDirectionDegrees < 60)
-				input.controllerY = -1;
+
+			var radius = Math.sqrt(x*x + y*y)/document.getElementById("stickBorder").offsetHeight;
+			
+			var thresholdRadius = 0.15;
+			if(radius > thresholdRadius){
+				if(touchDirectionDegrees > 30 && touchDirectionDegrees < 150 )
+					input.controllerX = 1;
+				if(touchDirectionDegrees > 210 && touchDirectionDegrees < 330)
+					input.controllerX = -1;
+				if(touchDirectionDegrees > 120 && touchDirectionDegrees < 240)
+					input.controllerY = 1;
+				if(touchDirectionDegrees > 300 || touchDirectionDegrees < 60)
+					input.controllerY = -1;
+			}
 		}
 		document.getElementById("stick").style.top = (40+10*input.controllerY) + "%";
 		document.getElementById("stick").style.left = (40+10*input.controllerX) + "%";
@@ -862,7 +868,16 @@ function resetGame(){
 	
 	player.resetPosition();
 
-
+	for(i = 0;i< 4;i++){
+		enemyList[i] = new Enemy(i);
+		diverList[i] = new Diver(i);
+		// Link same lane Divers and Sharks.
+		enemyList[i].childDiver = diverList[i];
+		diverList[i].parentShark = enemyList[i];
+		enemyList[i].reset(enemyLanes[i]);
+		diverList[i].reset();
+		
+	}
 
 	for(i in enemyList){
 		enemyList[i].reset(enemyLanes[i]);
@@ -895,6 +910,12 @@ function init(){
 		document.getElementById("gameCanvas").style.width = window.innerWidth + "px";
 		document.getElementById("gameCanvas").style.height = Math.floor(window.innerWidth/1.66) + "px";
 		document.getElementById("controller").style.display = "inline-block";
+
+		function preventBehavior(e) {
+			e.preventDefault(); 
+		};
+		
+		document.addEventListener("touchmove", preventBehavior, {passive: false});
 	}else{
 		document.getElementById("gameCanvas").style.width = "70vw";
 		document.getElementById("gameCanvas").style.height = "42vw";
