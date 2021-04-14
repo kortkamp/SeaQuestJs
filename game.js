@@ -281,17 +281,21 @@ class Player extends GameObject{
 		this.explosionFrameCounter = 0;
 		this.explosionInAction = false;
 	}
+	setInput(inputData){
+		this.vx = inputData.x;
+		this.vy = inputData.y;
+		if(this.vx > 0)
+			this.dir = 1;
+		
+		if(this.vx < 0)
+				this.dir = -1;
+		if(inputData.fire)
+			this.fire();
+	}
 	update(){
 		if(!this.engineStoped){
-			this.y += this.input.getY();
-			this.vx = this.input.getX();
 			this.x += this.vx;
-			if(this.vx > 0)
-				this.dir = 1;
-			if(this.vx < 0)
-				this.dir = -1;
-			if(this.input.getFire())
-				torpedo.fire();
+			this.y += this.vy;
 		}	
 		//if(this.input.getFire())
 		//	this.fire();
@@ -392,6 +396,10 @@ class Player extends GameObject{
 		this.y = 39;
 		this.dir = 1;
 		
+	}
+	fire(){
+		if(!this.engineStoped)
+			torpedo.fire();
 	}
 	refitOxygen(){
 		
@@ -741,8 +749,15 @@ function frameLoop(){
 }
 
 
+
 class Input{
 	constructor(){
+		this.inputData = {
+			'x': 0,
+			'y': 0,
+			'fire':true
+		};
+		this.observerList = [];
 		this.moveLeft = 0;
 		this.moveRight = 0;
 		this.moveUp = 0;
@@ -755,6 +770,16 @@ class Input{
 		this.controllerY = 0;
 		this.controllerCenterX = this.stickArea.offsetLeft+this.stickArea.offsetWidth/2;
 		this.controllerCenterY = this.stickArea.offsetTop+this.stickArea.offsetHeight/2+ this.controller.offsetTop;
+	}
+	atachObserver(observer){
+		this.observerList.push(observer);
+	}
+	notifyObservers(){
+		for(var id in this.observerList)
+			this.observerList[id].setInput({	'x':this.moveRight-this.moveLeft+this.controllerX,
+							'y':this.moveDown-this.moveUp + this.controllerY,
+							'fire':this.fire});
+
 	}
 	keyboardListener(e){
 		
@@ -781,7 +806,7 @@ class Input{
 			}
 			
 		}
-		
+		this.notifyObservers();
 	}
 	cotrollerListener(e,input){
 		
@@ -815,6 +840,7 @@ class Input{
 					input.controllerY = -1;
 			}
 		}
+		input.notifyObservers();
 		document.getElementById("stick").style.top = (40+10*input.controllerY) + "%";
 		document.getElementById("stick").style.left = (40+10*input.controllerX) + "%";
 	}
@@ -931,6 +957,7 @@ function init(){
 	input = new Input();
 	input.initControllerListener(input);
 	player = new Player(input);
+	input.atachObserver(player);
 	torpedo = new Torpedo(player,0,0,1);
 
 	seaToken = 0x08;
