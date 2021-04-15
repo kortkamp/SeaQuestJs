@@ -402,14 +402,11 @@ class Player extends GameObject{
 			torpedo.fire();
 	}
 	refitOxygen(){
-		
-		
 		this.engineStoped = false;
 		if(this.oxygen < maxOxygenBar && !this.explosionInAction){
 			if(refitOxygenSound.currentTime == 0 || refitOxygenSound.currentTime==refitOxygenSound.duration){
 				refitOxygenSound.currentTime = refitOxygenSound.duration*(this.oxygen/maxOxygenBar);
 				refitOxygenSound.play();
-			
 			}
 			player.oxygen += 0.5;
 			this.engineStoped = true;
@@ -751,7 +748,41 @@ function frameLoop(){
 	ctx.fillRect(0,0,8,height);
 }
 
+/*
+	This class gonna organize and synchonize all timed events for game and game objects.
+	We must atach only functions or methods to observerList
+*/
+class GameTimer{
+	constructor(){
+		if(typeof GameTimer.instance === 'object'){
+			
+			return GameTimer.instance;
+		}
+		GameTimer.instance = this;
+		this.mainTimerId = setInterval(this.timerEventListener.bind(this), 16);
+		this.observerList = [];
+		
+		return(this);
+	}
 
+	attachObserver(functionToUpdate){
+		this.observerList.push(functionToUpdate);
+	}
+	detachObserver(functionToDetach){
+		for(var obs in this.observerList)
+			if(this.observerList[obs] === functionToDetach)
+				this.observerList.splice(obs,1);
+	}
+	notifyObservers(){
+
+	}
+	timerEventListener(){
+		
+		for(var obs of this.observerList)
+			obs();
+	}
+
+}
 
 class Input{
 	constructor(){
@@ -775,7 +806,11 @@ class Input{
 		this.controllerCenterY = this.stickArea.offsetTop+this.stickArea.offsetHeight/2+ this.controller.offsetTop;
 	}
 	atachObserver(observer){
-		this.observerList.push(observer);
+		
+		if(observer.setInput == undefined)
+			console.trace(observer.constructor.name + " has not setInput method");
+		else
+			this.observerList.push(observer);
 	}
 	notifyObservers(){
 		for(var id in this.observerList)
@@ -848,26 +883,9 @@ class Input{
 		document.getElementById("stick").style.left = (40+10*input.controllerX) + "%";
 	}
 	initControllerListener(input){
-		
-		
-		// Add listener functions to mouse events.
-		//this.stickArea.addEventListener("mousedown", this.cotrollerListener, false);
-		//this.stickArea.addEventListener("mouseup", this.cotrollerListener, false);
-		//this.stickArea.addEventListener("mousemove", this.cotrollerListener, false);
-
-		// Add listener functions to touch events.
 		this.stickArea.addEventListener("touchstart", function(e){input.cotrollerListener(e,input)}, false);
 		this.stickArea.addEventListener("touchend", function(e){input.cotrollerListener(e,input)}, false);
 		this.stickArea.addEventListener("touchmove",function(e){input.cotrollerListener(e,input)}, false);
-	}
-	getControllerX(){
-
-	}
-	getControllerY(){
-
-	}
-	getControllerFire(){
-
 	}
 	getX(){
 		return(this.moveRight-this.moveLeft + this.controllerX);
@@ -935,7 +953,6 @@ function mobileCheck() {
 function init(){
 	
 	if(mobileCheck()){
-		console.log("mobile");
 		document.getElementById("gameCanvas").style.width = window.innerWidth + "px";
 		document.getElementById("gameCanvas").style.height = Math.floor(window.innerWidth/1.66) + "px";
 		document.getElementById("controller").style.display = "inline-block";
@@ -956,7 +973,7 @@ function init(){
 	loadSounds();
 	
 	// Set refresh to 60, like the original Atari 2600 hardware.
-	updateTimerTimerId = setInterval(frameLoop, 16);
+	//updateTimerTimerId = setInterval(frameLoop, 16);
 	input = new Input();
 	input.initControllerListener(input);
 	player = new Player(input);
@@ -1005,6 +1022,8 @@ function init(){
 			//diverList[i].active = false;
 		}
 	
+	timer = new GameTimer();
+	timer.attachObserver(frameLoop);
 }
 
 

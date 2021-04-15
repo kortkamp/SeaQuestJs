@@ -8,6 +8,8 @@
 
 # todo list
 
+* Urgentes
+	* Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.
 * Gerais
 	* Separar game.js em módulos: gráfico, input, classes??
 	* Aplicar o design observer para input e timed events
@@ -18,6 +20,7 @@
 	* Entregar divers e contar pontuação
 	* Enemy sub precisam atirar torpedos
 	* Mini sub na superfície
+	
 
 # Jounal (Sorry, just in portuguese)
 
@@ -65,4 +68,4 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 11/04/2021
 	* Implementar os mergulhadores foi realmente desafiador. À medida que o projeto cresce e as classes interagem torna-se mais e mais complexo fazer novas implementações sem gerar conflitos. Faz-se necessário estudar mais um pouco de Design Patterns a fim de que os futuros projetos sejam melhor organizados e não gerem essa dificuldade nos estágios finais.
 	* Para adicionar os sons do jogo foi usado o HTML Audio devido à facilidade de uso e disponibilidade do sons já prontos via Stella. 
-	
+* 12/04/2021 Ao longo dos dois últimos dias parte do código foi melhor organizado e foi adicionado um controle para ser usado em navegadores mobile onde não existe a possibilidade de uso do teclado.	
