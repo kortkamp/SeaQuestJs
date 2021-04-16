@@ -354,7 +354,15 @@ class Player extends GameObject{
 		else{
 			if(this.oxygen == 0 && this.y > startPlayerPosition.y)
 				this.destroyPlayer();
-			}
+			if(this.oxygen <= 16)
+				if(this.enginePower != 0)
+					if(lowOxygenSound.currentTime == 0 || lowOxygenSound.currentTime==lowOxygenSound.duration)
+						lowOxygenSound.play();
+						
+		}
+		//if(this.oxygen <= 16 && this.enginePower != 0)
+			
+		
 	}
 	colisionAction(object){
 		object.reset();
@@ -434,7 +442,7 @@ class Player extends GameObject{
 	refitOxygen(){
 		
 		this.enginePower = 1;
-		if(this.oxygen < maxOxygenBar && !this.explosionInAction){
+		if(this.oxygen < maxOxygenBar && !this.explosionInAction && this.rescuedDivers<6){
 			if(refitOxygenSound.currentTime == 0 || refitOxygenSound.currentTime==refitOxygenSound.duration){
 				refitOxygenSound.currentTime = refitOxygenSound.duration*(this.oxygen/maxOxygenBar);
 				refitOxygenSound.play();
@@ -466,14 +474,23 @@ class Player extends GameObject{
 		}
 	}
 	delliverAllDiversHandler(){
-		console.log("reached!!");
+		var spriteNumber = (this.animationCounter>>this.animationSpeed)%3;
+		drawSprite(this.sprite[spriteNumber],Math.floor(this.x),Math.floor(this.y),this.dir,this.color,this.hScale);
+		this.animationCounter++;
 		if(this.oxygen > 0){
 			if(frameCounter&2==2){
+
+				if(dropOxygenSound.currentTime == 0 || dropOxygenSound.currentTime==dropOxygenSound.duration){
+					//dropOxygenSound.currentTime = dropOxygenSound.duration*(this.oxygen/maxOxygenBar);
+					dropOxygenSound.play();
+				}
+				
 				this.oxygen--;
 				score+=20;
 			}
 		}else if(this.rescuedDivers > 0){
 			if((frameCounter&0b01111)==0b01111){
+				deliverDiverSound.play();
 				this.rescuedDivers--;
 				score+=20;
 			}
@@ -984,6 +1001,9 @@ function loadSounds(){
 	destroyPlayerSound = new Audio('./sounds/destroyPlayer.mp3');
 	rescueDiverSound = new Audio('./sounds/rescueDiver.mp3');
 	refitOxygenSound = new Audio('./sounds/refitOxygen.mp3');
+	deliverDiverSound = new Audio('./sounds/deliverDiver.mp3');
+	dropOxygenSound = new Audio('./sounds/dropOxygen.mp3');
+	lowOxygenSound = new Audio('./sounds/lowOxygen.mp3');
 	//audio.play();
 
 }
