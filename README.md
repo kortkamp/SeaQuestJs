@@ -9,7 +9,8 @@
 # todo list
 
 * Urgentes
-	* Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.
+	* ~~Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.~~
+	* Mudar todas as timed functions para serem chamadas pelo GameTimer
 * Gerais
 	* Separar game.js em módulos: gráfico, input, classes??
 	* Aplicar o design observer para input e timed events
@@ -68,4 +69,7 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 11/04/2021
 	* Implementar os mergulhadores foi realmente desafiador. À medida que o projeto cresce e as classes interagem torna-se mais e mais complexo fazer novas implementações sem gerar conflitos. Faz-se necessário estudar mais um pouco de Design Patterns a fim de que os futuros projetos sejam melhor organizados e não gerem essa dificuldade nos estágios finais.
 	* Para adicionar os sons do jogo foi usado o HTML Audio devido à facilidade de uso e disponibilidade do sons já prontos via Stella. 
-* 12/04/2021 Ao longo dos dois últimos dias parte do código foi melhor organizado e foi adicionado um controle para ser usado em navegadores mobile onde não existe a possibilidade de uso do teclado.	
+* 12/04/2021 
+	* Ao longo dos dois últimos dias parte do código foi melhor organizado e foi adicionado um controle para ser usado em navegadores mobile onde não existe a possibilidade de uso do teclado.	
+* 16/04/2021
+	* Nos últimos dias o código do jogo está sendo melhor organizado, foi implementada uma classe singletron que centraliza os eventos timed e defini a meta de que nenhuma classe dependa de outra diretamente. A classe Input já funciona desse modo trabalhando com a ideia de Observers.
