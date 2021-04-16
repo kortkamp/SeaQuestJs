@@ -950,7 +950,7 @@ function resetGame(){
 	score = 0;
 	player.lifesCounter = 3;
 	player.oxygen = 0;
-	player.rescuedDivers = 6;
+	player.rescuedDivers = 0;
 	gameDificulty = 0;
 	
 	// Frame counter for use in animations and miscs.
