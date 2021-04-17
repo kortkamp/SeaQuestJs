@@ -4,7 +4,7 @@
 
 
 # Instructions
-*	Use arroys keys to move and space to shoot
+*	Use WASD or arrow keys to move and space to shoot
 
 # todo list
 
@@ -18,8 +18,9 @@
 	* Testar desempenho e otimizar as rotinas mais comuns
 	* Estudar e aplicar o Design Pattern mais indicado
 * Específicas
-	* Entregar divers e contar pontuação
-	* Enemy sub precisam atirar torpedos
+	* ~~Entregar divers e contar pontuação~~
+	* ~~Enemy sub precisam atirar torpedos~~
+	* Tubarões e subamarinos duplos e triplos
 	* Mini sub na superfície
 	
 
@@ -73,3 +74,5 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	* Ao longo dos dois últimos dias parte do código foi melhor organizado e foi adicionado um controle para ser usado em navegadores mobile onde não existe a possibilidade de uso do teclado.	
 * 16/04/2021
 	* Nos últimos dias o código do jogo está sendo melhor organizado, foi implementada uma classe singletron que centraliza os eventos timed e defini a meta de que nenhuma classe dependa de outra diretamente. A classe Input já funciona desse modo trabalhando com a ideia de Observers.
+* 17/04/2021 
+	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo. 	
