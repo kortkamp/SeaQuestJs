@@ -155,13 +155,13 @@ class GameObject {
 }
 
 class Torpedo extends GameObject{
-	constructor(parentLaucher,x,y,dir){
-		super(singleTorpedoSprite,x,y,0x18,2);
+	constructor(parentLaucher){
+		super(singleTorpedoSprite,0,0,0x18,2);
 		
 		this.parentLaucher = parentLaucher;
 		this.speed = 3;
 		this.hScale = 1;
-		this.dir = dir;
+		this.dir = 1;
 		this.vx = this.dir*this.speed;
 		this.active = false;
 	}
@@ -271,7 +271,7 @@ class Diver extends GameObject{
 	reset(){
 		if(this.recentRescued){
 			// have a probability to create a new diver.
-			if(Math.random() > 0.5){
+			if(Math.random() < 0.5){
 				this.recentRescued = false;
 			}
 		}
@@ -391,7 +391,8 @@ class Player extends GameObject{
 		this.oxygen = 0;
 		this.subStillSurfaced = true;
 		this.lifesCounter--;
-
+		if(this.rescuedDivers>0)
+			this.rescuedDivers--;
 		if(this.lifesCounter < 0)
 			this.active = false;
 
@@ -436,7 +437,7 @@ class Player extends GameObject{
 		
 	}
 	fire(){
-		if(!this.engineStoped)
+		if(this.enginePower != 0)
 			torpedo.fire();
 	}
 	refitOxygen(){
@@ -467,7 +468,8 @@ class Player extends GameObject{
 				gameDificulty++;
 			}
 			else{
-				this.destroyPlayer();
+				if(this.oxygen > 0)
+					this.destroyPlayer();
 				
 			}
 			this.subStillSurfaced = true;
@@ -505,19 +507,16 @@ class Enemy extends GameObject{
 	constructor(lanePosition){
 		super(null,null,enemyLanes[lanePosition],null,null);
 		
+		if(!(lanePosition => 0 && lanePosition <= 3))
+			console.log("Error creating enemy, you must select a lane betwen 0-3");
+
 		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
 		// 0 = shark and 1 = sub
 		this.lanePosition = lanePosition;
 		this.startYPosition = enemyLanes[lanePosition];
 		this.enemyType = enemyId.shark;
 		this.childDiver = null;
-		//this.dir = dir;
-		//this.vx = this.dir * 3/8;
-		
-		//this.x = this.startPoint[1-dir];
-		//this.animationSpeed = 3;
-		//this.sharkOscilationCounter = 0;
-		//this.reset();
+	
 	}
 	update(){
 		
@@ -525,7 +524,7 @@ class Enemy extends GameObject{
 		this.y = this.startYPosition + this.sharkOscilation();
 		this.x += this.vx;
 		
-		this.checkLimits();	
+		this.checkLimits();
 		this.checkCollision();
 		
 		this.color = enemyColors[this.enemyType][gameDificulty%8];
@@ -565,15 +564,15 @@ class Enemy extends GameObject{
 	kill(){
 		// When you kill a enemy , it resets to a shark.
 		this.enemyType = enemyId.shark;	
-		this.reset(this.y);	
+		this.reset();	
+		this.childDiver.dir = this.dir
 		this.childDiver.vx = this.vx/2;
 		this.childDiver.animationSpeed = 3;
 		score += 20;
-		
 	}
-	reset(posY){
+	reset(){
 		
-		this.y = posY;
+		this.y = enemyLanes[this.lanePosition];
 		//Direction is randomized every enemy reset.
 		this.dir = binaryRandom();
 		//Vx must follow  "dir" direction.
@@ -585,8 +584,9 @@ class Enemy extends GameObject{
 		// Update the enemy sprite. 0 for shark and 1 for sub.
 		this.sprite = enemySprites[this.enemyType];
 		
-		
-		
+		this.childDiver.vx = this.vx/2;
+		this.childDiver.animationSpeed = 3;
+
 		// If enemy is a shark and is on the same side of hidden diver, ativate it.
 		if((this.enemyType == enemyId.shark) &&(!this.childDiver.active)&& (Math.abs(this.x - this.childDiver.x) < 100)){
 			
@@ -883,13 +883,17 @@ class Input{
 		
 		var code = e.keyCode;
 		if(e.type == "keydown"){
-			
+				
 				switch (code) {
 					case 32: this.fire = true; break; // Space
 					case 37: this.moveLeft = 1; break; //Left key
+					case 65: this.moveLeft = 1; break; //A key
 					case 38: this.moveUp = 1; break; //Up key
+					case 87: this.moveUp = 1; break; //W key
 					case 39: this.moveRight = 1; break; //Right key
-					case 40: this.moveDown = 1;	break; //Down key     
+					case 68: this.moveRight = 1; break; //D key
+					case 40: this.moveDown = 1;	break; //Down key
+					case 83: this.moveDown = 1;	break; //S key     
 				}
 			
 		}
@@ -898,9 +902,13 @@ class Input{
 			switch (code) {
 				case 32: this.fire = false; break; //space
 				case 37: this.moveLeft = 0; break; //Left key
+				case 65: this.moveLeft = 0; break; //A key
 				case 38: this.moveUp = 0; break; //Up key
+				case 87: this.moveUp = 0; break; //W key
 				case 39: this.moveRight = 0; break; //Right key
+				case 68: this.moveRight = 0; break; //D key
 				case 40: this.moveDown = 0; break; //Down key     
+				case 83: this.moveDown = 0;	break; //S key  
 			}
 			
 		}
@@ -943,6 +951,8 @@ class Input{
 		document.getElementById("stick").style.left = (37+7*input.controllerX) + "%";
 	}
 	initControllerListener(input){
+		window.addEventListener('keydown',function(e){input.keyboardListener(e)},false);
+		window.addEventListener('keyup',function(e){input.keyboardListener(e)},false);	
 		this.stickArea.addEventListener("touchstart", function(e){input.cotrollerListener(e,input)}, false);
 		this.stickArea.addEventListener("touchend", function(e){input.cotrollerListener(e,input)}, false);
 		this.stickArea.addEventListener("touchmove",function(e){input.cotrollerListener(e,input)}, false);
@@ -975,22 +985,13 @@ function resetGame(){
 	
 	player.resetPosition();
 	player.active = true;
-/*
-	for(i = 0;i< 4;i++){
-		enemyList[i] = new Enemy(i);
-		diverList[i] = new Diver(i);
-		// Link same lane Divers and Sharks.
-		enemyList[i].childDiver = diverList[i];
-		diverList[i].parentShark = enemyList[i];
-		enemyList[i].reset(enemyLanes[i]);
-		diverList[i].reset();
-		
-	}
-*/
+
 	for(i in enemyList){
-		enemyList[i].reset(enemyLanes[i]);
+		enemyList[i].reset();
+		enemyList[i].type = enemyId.shark;
 		diverList[i].reset();
-		diverList[i].active = false;
+		//diverList[i].active = false;
+
 	}
 }
 
@@ -1004,7 +1005,7 @@ function loadSounds(){
 	deliverDiverSound = new Audio('./sounds/deliverDiver.mp3');
 	dropOxygenSound = new Audio('./sounds/dropOxygen.mp3');
 	lowOxygenSound = new Audio('./sounds/lowOxygen.mp3');
-	//audio.play();
+	
 
 }
 
@@ -1019,6 +1020,10 @@ function init(){
 	seaToken = 0x08;
 	score = 0;
 	frameCounter = 0;
+	gameDificulty = 0;
+
+	width = cv.width
+	height = cv.height
 
 	// Mobile / dektop configs
 	if(mobileCheck()){
@@ -1036,17 +1041,21 @@ function init(){
 		document.getElementById("gameCanvas").style.height = "42vw";
 	}
 
-	width = cv.width
-	height = cv.height
+
 
 	loadSounds();
 	
 	input = new Input();
 	input.initControllerListener(input);
 
+		
+
 	player = new Player(input);
+	//player.oxygen = 0;
+	//player.rescuedDivers = 0;
+	player.resetPosition();
 	input.atachObserver(player);
-	torpedo = new Torpedo(player,0,0,1);
+	torpedo = new Torpedo(player);
 
 
 
@@ -1056,37 +1065,28 @@ function init(){
 		// Link same lane Divers and Sharks.
 		enemyList[i].childDiver = diverList[i];
 		diverList[i].parentShark = enemyList[i];
-		enemyList[i].reset(enemyLanes[i]);
+		enemyList[i].reset(i);
 		diverList[i].reset();
 		
 	}
 
-	player.resetPosition();
-	window.addEventListener('keydown',function(e){input.keyboardListener(e)},false);
-	window.addEventListener('keyup',function(e){input.keyboardListener(e)},false);	
 	
-	//resetGame();
-	//frameLoop();
 
+	
+	
+		
+	
+		
+	
+		
 
-		
-		
-		player.oxygen = 0;
-		player.rescuedDivers = 0;
-		gameDificulty = 0;
-		
-		// Frame counter for use in animations and miscs.
-		frameCounter = 0;
-		
-		player.resetPosition();
 	
 	
-	
-		for(i in enemyList){
-			enemyList[i].reset(enemyLanes[i]);
+	for(i in enemyList){
+			enemyList[i].reset(i);
 			diverList[i].reset();
 			//diverList[i].active = false;
-		}
+	}
 	
 	// Colisions
 	player.addCollisor(enemyList);
@@ -1095,7 +1095,6 @@ function init(){
 		diver.addCollisor(enemyList);
 		diver.addCollisor(player);
 	}
-	
 
 
 	frameEvent = new GameTimer();
@@ -1105,8 +1104,6 @@ function init(){
 	frameEvent.attachObserver(enemyList);
 	frameEvent.attachObserver(diverList);
 
-	
-	//setInterval(frameLoop,16);
 }
 
 
