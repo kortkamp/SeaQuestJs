@@ -13,7 +13,7 @@
 	* Mudar todas as timed functions para serem chamadas pelo GameTimer
 * Gerais
 	* Separar game.js em módulos: gráfico, input, classes??
-	* Aplicar o design observer para input e timed events
+	* ~~Aplicar o design observer para input e timed events~~
 	* Centralizar timed events em uma classe
 	* Testar desempenho e otimizar as rotinas mais comuns
 	* Estudar e aplicar o Design Pattern mais indicado
@@ -22,6 +22,7 @@
 	* ~~Enemy sub precisam atirar torpedos~~
 	* Tubarões e subamarinos duplos e triplos
 	* Mini sub na superfície
+	* Ganhar uma vida a cada 10k pontos.
 	
 
 # Jounal (Sorry, just in portuguese)
