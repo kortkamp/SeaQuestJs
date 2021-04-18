@@ -38,6 +38,9 @@ var cv = document.getElementById("gameCanvas");
 var ctx = cv.getContext("2d");
 
 var score;
+var killScore;
+var oxygenScore;
+var diverScore;
 
 
 //Dificulty , aka speed of the game.
@@ -235,7 +238,10 @@ class EnemyTorpedo extends Torpedo{
 		this.x = -20;
 		this.halt();
 	}
-	fire(){
+	kill(){
+		this.reset();
+	}
+	fire(posX){
 		
 		if(!this.active){
 			
@@ -243,7 +249,7 @@ class EnemyTorpedo extends Torpedo{
 			this.vx = this.dir*this.speed;
 			
 			
-			this.x = this.parentLaucher.x ;//+ 6*this.parentLaucher.hScale + 1;
+			this.x = posX ;//+ 6*this.parentLaucher.hScale + 1;
 			this.active = true;
 		}
 	}
@@ -403,7 +409,7 @@ class Player extends GameObject{
 	}
 	colisionAction(object){
 		
-		object.reset();
+		object.kill();
 		stopAllGameObjects();
 		this.destroyPlayer();
 	}
@@ -524,16 +530,20 @@ class Player extends GameObject{
 				}
 				
 				this.oxygen--;
-				score+=20;
+				score+=oxygenScore;
+				
 			}
 		}else if(this.rescuedDivers > 0){
 			if((frameCounter&0b01111)==0b01111){
 				deliverDiverSound.play();
 				this.rescuedDivers--;
-				score+=20;
+				score+=diverScore;
 			}
 		}else{
 			gameDificulty++;
+			oxygenScore += 10;
+			killScore += 10;
+			diverScore += 50;
 			this.update = this.updateHandler;
 		}
 	}
@@ -544,7 +554,7 @@ class Enemy extends GameObject{
 		super(null,null,enemyLanes[lanePosition],null,null);
 		
 		if(!(lanePosition => 0 && lanePosition <= 3))
-			console.log("Error creating enemy, you must select a lane betwen 0-3");
+			console.log("Error creating enemy, you must select a lane between 0-3");
 
 		this.startPoint = [-55,0,atariScreen.colorClocks + 55];
 		// 0 = shark and 1 = sub
@@ -553,7 +563,17 @@ class Enemy extends GameObject{
 		this.enemyType = enemyId.shark;
 		this.childDiver = null;
 		//mirrored enemies that fallow the first enemies in a lane.
-		
+		this.copies = [true,false,false];
+		this.copiesScheme = [
+			[true,false,false],
+			[true,false,false],
+			[true,true,false],
+			[true,true,false],
+			[true,false,true],
+			[true,false,true],
+		];
+			
+
 	
 	}
 	update(){
@@ -567,14 +587,40 @@ class Enemy extends GameObject{
 		this.fire();
 		
 		this.color = enemyColors[this.enemyType][gameDificulty%8];
-		drawSprite(
-					this.sprite[(this.animationCounter>>this.animationSpeed)%3],
-					Math.floor(this.x),
-					Math.floor(this.y),
-					this.dir,
-					this.color,
-					this.hScale);
-		this.animationCounter++;
+		for(var copy in this.copies)
+			if(this.copies[copy])
+				drawSprite(
+							this.sprite[(this.animationCounter>>this.animationSpeed)%3],
+							Math.floor(this.x) - this.dir * copy*16,
+							Math.floor(this.y),
+							this.dir,
+							this.color,
+							this.hScale);
+				this.animationCounter++;
+	}
+	checkCollision(){
+		this.color = enemyColors[this.enemyType][gameDificulty%8];
+		for(var copy in this.copies)
+			if(this.copies[copy])
+				for(var object of this.collisorList){	
+					
+					// horizontal contact
+					if(object.active)
+						if(((this.x - this.dir * copy*16) + this.hScale * 8) >= object.x && (this.x - this.dir * copy*16) <= (object.x + object.hScale*8)) {
+							if((this.y + this.sprite[0].length) >= object.y && this.y <= object.y + object.sprite[0].length){
+								// Must insert a pixel colision here.
+								this.copies[copy] = false;
+								this.colisionAction(object,copy);
+								
+								//console.log("colision copy:" + copy + " = " + this.copies[copy] );
+							}
+						}
+				}
+			
+	}
+	colisionAction(object,copy){
+		object.colisionAction(this);
+		
 	}
 	sharkOscilation(){
 		if(this.enemyType == enemyId.shark){
@@ -601,21 +647,45 @@ class Enemy extends GameObject{
 		};
 	}
 	fire(){
-		
-		if(this.enemyType == enemyId.sub)
-			if(!enemyTorpedoList[this.lanePosition].active)
-				if(this.x > 39 && this.x < (atariScreen.width-39) && this.vx != 0) 
-					enemyTorpedoList[this.lanePosition].fire();
-
+		for(let copy in this.copies){
+			let copyPosX = this.x - this.dir * copy * 16;
+			//console.log(this.x +" "+ copyPosX);
+			if(this.copies[copy]){ // if the copy is active
+				if(this.enemyType == enemyId.sub)
+					if(!enemyTorpedoList[this.lanePosition].active)
+						if(copyPosX > 39 && copyPosX < (atariScreen.width-39) && this.vx != 0) {
+							//console.log("Enemy " + this.lanePosition);
+							//console.log("	copy " + copy +" this.x=" +this.x + " copyPosX=" + copyPosX);
+							enemyTorpedoList[this.lanePosition].fire(copyPosX);
+							
+						}
+				return;
+			}
+		}
 	}
 	kill(){
-		// When you kill a enemy , it resets to a shark.
-		this.enemyType = enemyId.shark;	
-		this.reset();	
-		this.childDiver.dir = this.dir
-		this.childDiver.vx = this.vx/2;
-		this.childDiver.animationSpeed = 3;
-		score += 20;
+		
+		score += killScore;
+
+
+	
+		// if all copies are dead
+		if(!(this.copies[0]||this.copies[1]||this.copies[2])){
+			// When you kill a enemy , it resets to a shark.	
+			this.enemyType = enemyId.shark;	
+			this.reset();	
+			this.childDiver.dir = this.dir
+			this.childDiver.vx = this.vx/2;
+			this.childDiver.animationSpeed = 3;
+			this.setNewCopiesScheme();
+		}
+	}
+	setNewCopiesScheme(){
+		if(gameDificulty <= 5)
+			this.copies = this.copiesScheme[gameDificulty];
+		else
+			this.copies = [true,true,true];
+
 	}
 	reset(){
 		
@@ -701,7 +771,7 @@ function drawSprite(sprite,x,y,dir,color,hScale){
 		ctx.fillStyle = tiaColor(color);
 		// If sprite are in sea line discard 4 draw lines.
 		if(y + line < 46 || y + line > 49){
-			for(var i = 0; i<8;i++){
+			for(let i = 0; i<8;i++){
 				if(dir == 1){
 					if(((sprite[line]<<i)&0x80)==0x80){
 						ctx.fillRect(x+i*hScale,y+line,hScale,1);
@@ -1017,6 +1087,10 @@ class Input{
 
 function resetGame(){
 	
+
+	killScore = 20;
+	oxygenScore = 20;
+	diverScore = 50;
 	// Token used to draw sea waves.
 	seaToken = 0x08;
 	// Counter used to generate a new seaToken.
@@ -1062,7 +1136,7 @@ function mobileCheck() {
 	return check;
   };
 function stopAllGameObjects(){
-	for(var i = 0; i< 4; i++ ){
+	for(let i = 0; i< 4; i++ ){
 		enemyTorpedoList[i].vx = 0;
 		enemyList[i].vx = 0;
 		diverList[i].vx = 0;
@@ -1071,7 +1145,7 @@ function stopAllGameObjects(){
 	torpedo.halt();
 }
 function resetAllgameObjects(){
-	for(var i = 0; i< 4; i++ ){		
+	for(let i = 0; i< 4; i++ ){		
 		diverList[i].reset();
 		diverList[i].active = false;
 		enemyList[i].reset();
@@ -1141,9 +1215,13 @@ function init(){
 	}
 	
 	// Colisions
-	player.addCollisor(enemyList);
+	//player.addCollisor(enemyList);
 	player.addCollisor(enemyTorpedoList);
-	torpedo.addCollisor(enemyList);
+	//torpedo.addCollisor(enemyList);
+	for(var enemy of enemyList){
+		enemy.addCollisor(player);
+		enemy.addCollisor(torpedo);
+	}
 	for(var diver of diverList){
 		diver.addCollisor(enemyList);
 		diver.addCollisor(player);

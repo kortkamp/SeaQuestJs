@@ -83,3 +83,6 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo.
 	* Mesmo com a refaturação do código não estou vizualizando uma maneira elegante de implementar os inimigos duplos e triplos, a abordagem de adicionar mais instâncias é uma possíbilidade, porém percebi que no jogo original há uma persistência dos inimigos restantes nas duplas e trios até que se elimine o último , só então a lane é resetada e os inimigos voltam a ser duplos e triplos. Provavelmente a abordagem que escolherei será de alterar a classe Enemy para adicionar um array de posições e estados "active" com as referencias aos 3 potenciais inimigos naquela lane.
 >>>>>>> main
+* 18/04/2021 
+	* Percebi que à medida que as fases do jogo aumentam, a pontuação ganha por kill aumenta em 10 a partir do valor inicial de 20, assim como os ponto ganhos por mergulhador resgatado aumentam em 50 a partir de um valor inicial de 50.
+	* Ja para a dificuldade, tive que catalogar as alterações sofridas no jogo para cada vez que o player sobe à superfície. Os resultados seguem na tabela abaixo:
