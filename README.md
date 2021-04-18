@@ -4,9 +4,27 @@
 
 
 # Instructions
-*	Use arroys keys to move and space to shoot
+*	Use WASD or arrow keys to move and space to shoot
 
+# todo list
 
+* Urgentes
+	* ~~Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.~~
+	* Mudar todas as timed functions para serem chamadas pelo GameTimer
+	* Corrigir contador de pontuação, kill e divers valem mais à medida que a dificuldade aumenta.
+* Gerais
+	* Separar game.js em módulos: gráfico, input, classes??
+	* ~~Aplicar o design observer para input e timed events~~
+	* Centralizar timed events em uma classe
+	* Testar desempenho e otimizar as rotinas mais comuns
+	* Estudar e aplicar o Design Pattern mais indicado
+* Específicas
+	* ~~Entregar divers e contar pontuação~~
+	* ~~Enemy sub precisam atirar torpedos~~
+	* Tubarões e subamarinos duplos e triplos
+	* Mini sub na superfície
+	* Ganhar uma vida a cada 10k pontos.
+	
 
 # Jounal (Sorry, just in portuguese)
 
@@ -48,4 +66,20 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	-Colisões
 	* A próxima implementação será o do detector de colisões que será usado na classe player , na classe diver e na futura classe torpedo. Aqui certamente teremos problemas porque a detecção de colosão no atari era pixel perfect, ou seja não trabalhava com hitbox e sim fazia a detecção pixel por pixel, então se o Atari 2600 disser que um tiro te acertou é porque é verdade. Eu quero implementar esse tipo de checador no meu projeto devido ao objetivo principal que fazer uma cópia perfeita do Sea Quest.
 * 09/04/2021
+<<<<<<< HEAD
 	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe para o jogo.
+=======
+	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe para o game match.
+* 10/04/2021 
+	* Foram feitas melhorias no desempenho da função tiaColor de acordo com dicas recebidas por um amigo do grupo Atari Brasil, onde não é mais necessário fazer qualquer operação para gerar a cor RGB, a solução inicial era receber um number hexadecimal, converter para string com dapStart(6,'0') e adicionar um hashtag # , ou seja converter no formato color string. Percebi que era mais fácil simplemente armazenar direto as strings e a função passou a ser um mero redirecionador de elementos do array de cores RGB do Atari.
+* 11/04/2021
+	* Implementar os mergulhadores foi realmente desafiador. À medida que o projeto cresce e as classes interagem torna-se mais e mais complexo fazer novas implementações sem gerar conflitos. Faz-se necessário estudar mais um pouco de Design Patterns a fim de que os futuros projetos sejam melhor organizados e não gerem essa dificuldade nos estágios finais.
+	* Para adicionar os sons do jogo foi usado o HTML Audio devido à facilidade de uso e disponibilidade do sons já prontos via Stella. 
+* 12/04/2021 
+	* Ao longo dos dois últimos dias parte do código foi melhor organizado e foi adicionado um controle para ser usado em navegadores mobile onde não existe a possibilidade de uso do teclado.	
+* 16/04/2021
+	* Nos últimos dias o código do jogo está sendo melhor organizado, foi implementada uma classe singletron que centraliza os eventos timed e defini a meta de que nenhuma classe dependa de outra diretamente. A classe Input já funciona desse modo trabalhando com a ideia de Observers.
+* 17/04/2021 
+	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo.
+	* Mesmo com a refaturação do código não estou vizualizando uma maneira elegante de implementar os inimigos duplos e triplos, a abordagem de adicionar mais instâncias é uma possíbilidade, porém percebi que no jogo original há uma persistência dos inimigos restantes nas duplas e trios até que se elimine o último , só então a lane é resetada e os inimigos voltam a ser duplos e triplos. Provavelmente a abordagem que escolherei será de alterar a classe Enemy para adicionar um array de posições e estados "active" com as referencias aos 3 potenciais inimigos naquela lane.
+>>>>>>> main
