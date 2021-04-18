@@ -11,6 +11,7 @@
 * Urgentes
 	* ~~Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.~~
 	* Mudar todas as timed functions para serem chamadas pelo GameTimer
+	* Corrigir contador de pontuação, kill e divers valem mais à medida que a dificuldade aumenta.
 * Gerais
 	* Separar game.js em módulos: gráfico, input, classes??
 	* ~~Aplicar o design observer para input e timed events~~
@@ -76,4 +77,5 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 16/04/2021
 	* Nos últimos dias o código do jogo está sendo melhor organizado, foi implementada uma classe singletron que centraliza os eventos timed e defini a meta de que nenhuma classe dependa de outra diretamente. A classe Input já funciona desse modo trabalhando com a ideia de Observers.
 * 17/04/2021 
-	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo. 	
+	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo.
+	* Mesmo com a refaturação do código não estou vizualizando uma maneira elegante de implementar os inimigos duplos e triplos, a abordagem de adicionar mais instâncias é uma possíbilidade, porém percebi que no jogo original há uma persistência dos inimigos restantes nas duplas e trios até que se elimine o último , só então a lane é resetada e os inimigos voltam a ser duplos e triplos. Provavelmente a abordagem que escolherei será de alterar a classe Enemy para adicionar um array de posições e estados "active" com as referencias aos 3 potenciais inimigos naquela lane.

@@ -552,6 +552,8 @@ class Enemy extends GameObject{
 		this.startYPosition = enemyLanes[lanePosition];
 		this.enemyType = enemyId.shark;
 		this.childDiver = null;
+		//mirrored enemies that fallow the first enemies in a lane.
+		
 	
 	}
 	update(){
