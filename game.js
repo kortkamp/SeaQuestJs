@@ -184,8 +184,6 @@ class Torpedo extends GameObject{
 	checkLimits(){
 		if(this.x >= atariScreen.width || (this.x + spriteWidth <= 0 )){
 			this.halt();
-			//fireTorpedoSound.pause();
-			//fireTorpedoSound.currentTime = 0;
 		}
 		
 	}
@@ -532,21 +530,23 @@ class Player extends GameObject{
 				}
 				
 				this.oxygen--;
-				score+=oxygenScore;
+				addScore(oxygenScore);
 				
 			}
 		}else if(this.rescuedDivers > 0){
 			if((frameCounter&0b01111)==0b01111){
 				deliverDiverSound.play();
 				this.rescuedDivers--;
-				score+=diverScore;
+				addScore(diverScore);
 			}
 		}else{
 			gameDificulty++;
 			enemySpeed += 0.0625;
-			oxygenScore += 10;
-			killScore += 10;
-			diverScore += 50;
+			
+			if(gameDificulty <= 7 ){
+				killScore += 10;
+				diverScore += 50;
+			}
 			this.update = this.updateHandler;
 		}
 	}
@@ -669,8 +669,8 @@ class Enemy extends GameObject{
 	}
 	kill(){
 		
-		score += killScore;
-
+		addScore(killScore);
+		
 
 	
 		// if all copies are dead
@@ -1163,6 +1163,16 @@ function resetAllgameObjects(){
 		enemyTorpedoList[i].reset();
 
 	}
+}
+function addScore(value){
+
+	let extraLife = 10000;
+
+	console.log((score%extraLife) + " " + (score+value)%extraLife);
+	if((score%extraLife) > extraLife/2 && ((score+value)%extraLife) < extraLife/2 )
+		player.lifesCounter++;
+
+	score+=value;
 }
 function init(){
 	

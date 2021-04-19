@@ -83,4 +83,4 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	* Percebi que à medida que as fases do jogo aumentam, a pontuação ganha por kill aumenta em 10 a partir do valor inicial de 20, assim como os ponto ganhos por mergulhador resgatado aumentam em 50 a partir de um valor inicial de 50.
 	* Ja para a dificuldade, tive que catalogar as alterações sofridas no jogo para cada vez que o player sobe à superfície. Os resultados seguem no gráfico abaixo:
 	![image](https://user-images.githubusercontent.com/236848/115176703-04c48200-a0a4-11eb-84c9-8b8da0812728.png)
-	Pode-se ver que a relação é linear e dada pela função  speed = 0.0625 * dificulty + 0.375.
+	* Pode-se ver que a relação é linear e dada pela função  speed = 0.0625 * dificulty + 0.375.
