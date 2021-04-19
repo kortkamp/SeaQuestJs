@@ -46,6 +46,8 @@ var diverScore;
 //Dificulty , aka speed of the game.
 var gameDificulty;
 
+var enemySpeed = 0.375;
+
 // Max oxygen used do draw oxygen bar.
 var maxOxygenBar = 64;
 
@@ -61,8 +63,7 @@ var enemyLanes = [61,85,109,133];
 // these are cicling array, when dificulty rises to the last element the next muust be the first.
 var enemyColors = [	[0xc8,0xe8,0x58,0x36,0xc6,0xe8,0xc8,0x36], 
 					[0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08]];
-// Like enemyColors , enemySpeeds chages as dificulty increases.
-var enemySpeeds = [3/8	,	3/7,	8/14,	5/8,	11/16,	3/4,	13/16, 1,1,1,1,1,1,1,1,1,1];
+
 
 var inGame = false;
 
@@ -508,6 +509,7 @@ class Player extends GameObject{
 			else if(this.rescuedDivers>0){
 				this.rescuedDivers--;
 				gameDificulty++;
+				enemySpeed += 0.0625;
 			}
 			else{
 				if(this.oxygen > 0)
@@ -541,6 +543,7 @@ class Player extends GameObject{
 			}
 		}else{
 			gameDificulty++;
+			enemySpeed += 0.0625;
 			oxygenScore += 10;
 			killScore += 10;
 			diverScore += 50;
@@ -562,6 +565,7 @@ class Enemy extends GameObject{
 		this.startYPosition = enemyLanes[lanePosition];
 		this.enemyType = enemyId.shark;
 		this.childDiver = null;
+		
 		//mirrored enemies that fallow the first enemies in a lane.
 		this.copies = [true,false,false];
 		this.copiesScheme = [
@@ -677,14 +681,18 @@ class Enemy extends GameObject{
 			this.childDiver.dir = this.dir
 			this.childDiver.vx = this.vx/2;
 			this.childDiver.animationSpeed = 3;
+			
 			this.setNewCopiesScheme();
+			
 		}
 	}
 	setNewCopiesScheme(){
 		if(gameDificulty <= 5)
-			this.copies = this.copiesScheme[gameDificulty];
+			this.copies = this.copiesScheme[gameDificulty].slice();
 		else
 			this.copies = [true,true,true];
+
+		
 
 	}
 	reset(){
@@ -693,7 +701,7 @@ class Enemy extends GameObject{
 		//Direction is randomized every enemy reset.
 		this.dir = binaryRandom();
 		//Vx must follow  "dir" direction.
-		this.vx = this.dir * enemySpeeds[gameDificulty];
+		this.vx = this.dir * enemySpeed;
 		// The initial position depends on direction.
 		this.x = this.startPoint[1-this.dir];
 		// Basic animation speed depends on enemy type. Subs have 2 and sharks 3.
@@ -1100,6 +1108,7 @@ function resetGame(){
 	player.oxygen = 0;
 	player.rescuedDivers = 0;
 	gameDificulty = 0;
+	enemySpeed = 0.375;
 	
 	// Frame counter for use in animations and miscs.
 	frameCounter = 0;
@@ -1110,6 +1119,8 @@ function resetGame(){
 	for(i in enemyList){
 		enemyList[i].reset();
 		enemyList[i].type = enemyId.shark;
+		enemyList[i].sprite = sharkSprite;
+		enemyList[i].color = enemyColors[gameDificulty];
 		diverList[i].reset();
 		//diverList[i].active = false;
 
