@@ -10,8 +10,8 @@
 
 * Urgentes
 	* ~~Adicionar um timer observer em que funções poderão se cadastrar para serem invocadas.~~
-	* Mudar todas as timed functions para serem chamadas pelo GameTimer
-	* Corrigir contador de pontuação, kill e divers valem mais à medida que a dificuldade aumenta.
+	* ~~Mudar todas as timed functions para serem chamadas pelo GameTimer~~
+	* ~~Corrigir contador de pontuação, kill e divers valem mais à medida que a dificuldade aumenta.~~
 * Gerais
 	* Separar game.js em módulos: gráfico, input, classes??
 	* ~~Aplicar o design observer para input e timed events~~
@@ -21,7 +21,7 @@
 * Específicas
 	* ~~Entregar divers e contar pontuação~~
 	* ~~Enemy sub precisam atirar torpedos~~
-	* Tubarões e subamarinos duplos e triplos
+	* ~~Tubarões e subamarinos duplos e triplos~~
 	* Mini sub na superfície
 	* Ganhar uma vida a cada 10k pontos.
 	
@@ -66,9 +66,6 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 	-Colisões
 	* A próxima implementação será o do detector de colisões que será usado na classe player , na classe diver e na futura classe torpedo. Aqui certamente teremos problemas porque a detecção de colosão no atari era pixel perfect, ou seja não trabalhava com hitbox e sim fazia a detecção pixel por pixel, então se o Atari 2600 disser que um tiro te acertou é porque é verdade. Eu quero implementar esse tipo de checador no meu projeto devido ao objetivo principal que fazer uma cópia perfeita do Sea Quest.
 * 09/04/2021
-<<<<<<< HEAD
-	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe para o jogo.
-=======
 	* Devido ao crescimento do código será necessário isolar melhor as classes e criar uma classe para o game match.
 * 10/04/2021 
 	* Foram feitas melhorias no desempenho da função tiaColor de acordo com dicas recebidas por um amigo do grupo Atari Brasil, onde não é mais necessário fazer qualquer operação para gerar a cor RGB, a solução inicial era receber um number hexadecimal, converter para string com dapStart(6,'0') e adicionar um hashtag # , ou seja converter no formato color string. Percebi que era mais fácil simplemente armazenar direto as strings e a função passou a ser um mero redirecionador de elementos do array de cores RGB do Atari.
@@ -82,7 +79,6 @@ Com o objetivo de estudar gráfico em Javascript e CSS estou desenvolvendo um cl
 * 17/04/2021 
 	* Foram adicionados os torpedos dos submarinos inimigos. Devido às mudanças de estrutura e pattern nos dias anteriores , foi extremamente fácil implementar um novo item no jogo.
 	* Mesmo com a refaturação do código não estou vizualizando uma maneira elegante de implementar os inimigos duplos e triplos, a abordagem de adicionar mais instâncias é uma possíbilidade, porém percebi que no jogo original há uma persistência dos inimigos restantes nas duplas e trios até que se elimine o último , só então a lane é resetada e os inimigos voltam a ser duplos e triplos. Provavelmente a abordagem que escolherei será de alterar a classe Enemy para adicionar um array de posições e estados "active" com as referencias aos 3 potenciais inimigos naquela lane.
->>>>>>> main
 * 18/04/2021 
 	* Percebi que à medida que as fases do jogo aumentam, a pontuação ganha por kill aumenta em 10 a partir do valor inicial de 20, assim como os ponto ganhos por mergulhador resgatado aumentam em 50 a partir de um valor inicial de 50.
 	* Ja para a dificuldade, tive que catalogar as alterações sofridas no jogo para cada vez que o player sobe à superfície. Os resultados seguem no gráfico abaixo:
